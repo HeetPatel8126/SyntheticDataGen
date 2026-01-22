@@ -23,7 +23,7 @@ def upgrade() -> None:
     job_status_enum = postgresql.ENUM(
         'pending', 'processing', 'completed', 'failed', 'cancelled',
         name='jobstatus',
-        create_type=True
+        create_type=False
     )
     job_status_enum.create(op.get_bind(), checkfirst=True)
     
@@ -31,7 +31,7 @@ def upgrade() -> None:
     data_type_enum = postgresql.ENUM(
         'user', 'ecommerce', 'company', 'custom',
         name='datatype',
-        create_type=True
+        create_type=False
     )
     data_type_enum.create(op.get_bind(), checkfirst=True)
     
@@ -39,7 +39,7 @@ def upgrade() -> None:
     output_format_enum = postgresql.ENUM(
         'csv', 'json',
         name='outputformat',
-        create_type=True
+        create_type=False
     )
     output_format_enum.create(op.get_bind(), checkfirst=True)
     
@@ -64,18 +64,18 @@ def upgrade() -> None:
         'jobs',
         sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column('user_id', sa.String(255), nullable=True),
-        sa.Column('data_type', sa.Enum('user', 'ecommerce', 'company', 'custom', name='datatype'), nullable=False),
+        sa.Column('data_type', postgresql.ENUM('user', 'ecommerce', 'company', 'custom', name='datatype', create_type=False), nullable=False),
         sa.Column('record_count', sa.Integer(), nullable=False),
-        sa.Column('output_format', sa.Enum('csv', 'json', name='outputformat'), nullable=True),
+        sa.Column('output_format', postgresql.ENUM('csv', 'json', name='outputformat', create_type=False), nullable=True),
         sa.Column('template_id', postgresql.UUID(as_uuid=True), nullable=True),
-        sa.Column('status', sa.Enum('pending', 'processing', 'completed', 'failed', 'cancelled', name='jobstatus'), nullable=True),
+        sa.Column('status', postgresql.ENUM('pending', 'processing', 'completed', 'failed', 'cancelled', name='jobstatus', create_type=False), nullable=True),
         sa.Column('progress', sa.Float(), default=0.0),
         sa.Column('error_message', sa.Text(), nullable=True),
         sa.Column('retry_count', sa.Integer(), default=0),
         sa.Column('max_retries', sa.Integer(), default=3),
         sa.Column('file_path', sa.String(500), nullable=True),
         sa.Column('file_size', sa.Integer(), nullable=True),
-        sa.Column('metadata', postgresql.JSON(astext_type=sa.Text()), nullable=True),
+        sa.Column('job_metadata', postgresql.JSON(astext_type=sa.Text()), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('started_at', sa.DateTime(), nullable=True),
         sa.Column('completed_at', sa.DateTime(), nullable=True),

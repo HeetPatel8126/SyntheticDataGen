@@ -7,7 +7,7 @@ from app.schemas.schemas import (
     TemplateCreate, TemplateResponse, TemplateListResponse,
     GenerateRequest, GenerateResponse,
     ErrorResponse, SuccessResponse,
-    DataTypeInfo, TemplateField
+    DataTypeInfo, DataTypeFieldInfo, DataTypeListResponse, TemplateField
 )
 
 __all__ = [
@@ -15,5 +15,5 @@ __all__ = [
     "TemplateCreate", "TemplateResponse", "TemplateListResponse",
     "GenerateRequest", "GenerateResponse",
     "ErrorResponse", "SuccessResponse",
-    "DataTypeInfo", "TemplateField"
+    "DataTypeInfo", "DataTypeFieldInfo", "DataTypeListResponse", "TemplateField"
 ]

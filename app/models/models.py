@@ -65,7 +65,7 @@ class Job(Base):
     file_size = Column(Integer, nullable=True)  # Size in bytes
     
     # Metadata
-    metadata = Column(JSON, nullable=True)  # Additional job metadata
+    job_metadata = Column(JSON, nullable=True)  # Additional job metadata
     
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
@@ -93,7 +93,7 @@ class Job(Base):
             "error_message": self.error_message,
             "file_path": self.file_path,
             "file_size": self.file_size,
-            "metadata": self.metadata,
+            "metadata": self.job_metadata,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "started_at": self.started_at.isoformat() if self.started_at else None,
             "completed_at": self.completed_at.isoformat() if self.completed_at else None,
