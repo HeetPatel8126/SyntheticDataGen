@@ -128,7 +128,7 @@ This will:
 
 1. **Clone and setup**:
    ```bash
-   git clone <repository>
+   git clone https://github.com/HeetPatel8126/SyntheticDataGen.git
    cd synthetic-data
    cp .env.example .env
    ```
