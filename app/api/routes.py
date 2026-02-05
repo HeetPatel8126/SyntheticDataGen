@@ -20,7 +20,7 @@ from app.database import get_db
 from app.api.auth import verify_api_key, get_current_user_id
 from app.models import Job, Template, JobStatus, DataType, OutputFormat
 from app.schemas import (
-    GenerateRequest, GenerateResponse,
+    GenerateRequest, GenerateResponse, PreviewRequest,
     JobResponse, JobStatusResponse, JobListResponse,
     TemplateCreate, TemplateResponse, TemplateListResponse,
     DataTypeInfo, DataTypeFieldInfo, DataTypeListResponse,
@@ -39,6 +39,50 @@ file_service = FileService()
 
 
 # ============== Data Generation Endpoints ==============
+
+@router.post(
+    "/preview",
+    summary="Preview generated data",
+    description="Generate a small sample of data to preview before creating a job.",
+    responses={
+        200: {"description": "Preview data generated successfully"},
+        400: {"model": ErrorResponse, "description": "Invalid request"},
+    }
+)
+async def preview_data(
+    request: PreviewRequest,
+    api_key: str = Depends(verify_api_key)
+):
+    """
+    Generate a preview of synthetic data (limited to 10 records).
+    This is synchronous and returns data immediately for preview purposes.
+    
+    - **data_type**: Type of data to generate (user, ecommerce, company)
+    - **output_format**: Output file format (csv or json) - for preview, only affects response format
+    """
+    # Validate data type
+    if request.data_type.value not in GeneratorFactory.get_available_types():
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=f"Invalid data type. Supported types: {GeneratorFactory.get_available_types()}"
+        )
+    
+    try:
+        # Create generator and generate preview records (max 10)
+        generator = GeneratorFactory.get_generator(request.data_type.value)
+        preview_count = min(request.record_count, 10)  # Limit to 10 for preview
+        records = generator.generate_batch(preview_count)
+        
+        logger.info(f"Generated preview of {preview_count} {request.data_type.value} records")
+        return records
+        
+    except Exception as e:
+        logger.error(f"Preview generation failed: {str(e)}")
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=f"Failed to generate preview: {str(e)}"
+        )
+
 
 @router.post(
     "/generate",

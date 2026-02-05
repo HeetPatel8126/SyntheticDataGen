@@ -18,13 +18,19 @@ class Settings(BaseSettings):
     debug: bool = Field(default=True)
     secret_key: str = Field(default="change-me-in-production")
     
+    # JWT Authentication
+    jwt_secret_key: str = Field(default="jwt-secret-change-in-production")
+    jwt_algorithm: str = Field(default="HS256")
+    access_token_expire_minutes: int = Field(default=30)
+    refresh_token_expire_days: int = Field(default=7)
+    
     # API Settings
     api_host: str = Field(default="0.0.0.0")
     api_port: int = Field(default=8000)
     api_prefix: str = Field(default="/api")
     
     # Database Configuration
-    database_url: str = Field(default="postgresql://postgres:postgres@localhost:5432/synthetic_data")
+    database_url: str = Field(default="sqlite:///./synthetic_data.db")
     database_echo: bool = Field(default=False)
     
     # Redis Configuration

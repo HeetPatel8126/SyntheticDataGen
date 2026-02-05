@@ -15,6 +15,7 @@ from fastapi.openapi.utils import get_openapi
 from app.config import settings
 from app.database import init_db, engine, Base
 from app.api.routes import router as api_router
+from app.api.auth_routes import router as auth_router
 from app import __version__
 
 # Configure logging
@@ -178,10 +179,18 @@ async def root():
             "generate": f"{settings.api_prefix}/generate",
             "jobs": f"{settings.api_prefix}/jobs",
             "templates": f"{settings.api_prefix}/templates",
-            "data_types": f"{settings.api_prefix}/data-types"
+            "data_types": f"{settings.api_prefix}/data-types",
+            "auth": f"{settings.api_prefix}/auth"
         }
     }
 
+
+# Include Auth router with prefix
+app.include_router(
+    auth_router,
+    prefix=settings.api_prefix,
+    tags=["Authentication"]
+)
 
 # Include API router with prefix
 app.include_router(
@@ -205,6 +214,11 @@ def custom_openapi():
     
     # Add security scheme
     openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT"
+        },
         "ApiKeyHeader": {
             "type": "apiKey",
             "in": "header",
@@ -219,6 +233,7 @@ def custom_openapi():
     
     # Apply security globally to API endpoints
     openapi_schema["security"] = [
+        {"BearerAuth": []},
         {"ApiKeyHeader": []},
         {"ApiKeyQuery": []}
     ]

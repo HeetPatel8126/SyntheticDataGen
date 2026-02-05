@@ -38,6 +38,52 @@ class OutputFormat(str, enum.Enum):
     JSON = "json"
 
 
+class User(Base):
+    """
+    User model for authentication
+    """
+    __tablename__ = "users"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    hashed_password = Column(String(255), nullable=False)
+    full_name = Column(String(255), nullable=True)
+    
+    # Account status
+    is_active = Column(Boolean, default=True)
+    is_verified = Column(Boolean, default=False)
+    
+    # Usage tracking
+    total_records_generated = Column(Integer, default=0)
+    storage_used = Column(Integer, default=0)  # bytes
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_login = Column(DateTime, nullable=True)
+    
+    # Relationships
+    jobs = relationship("Job", back_populates="user")
+    templates = relationship("Template", back_populates="user")
+    
+    def __repr__(self):
+        return f"<User(id={self.id}, email={self.email})>"
+    
+    def to_dict(self):
+        """Convert user to dictionary (exclude sensitive data)"""
+        return {
+            "id": str(self.id),
+            "email": self.email,
+            "full_name": self.full_name,
+            "is_active": self.is_active,
+            "is_verified": self.is_verified,
+            "total_records_generated": self.total_records_generated,
+            "storage_used": self.storage_used,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "last_login": self.last_login.isoformat() if self.last_login else None,
+        }
+
+
 class Job(Base):
     """
     Job model for tracking data generation jobs
@@ -45,7 +91,7 @@ class Job(Base):
     __tablename__ = "jobs"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(String(255), nullable=True, index=True)  # For future user management
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True, index=True)
     
     # Job configuration
     data_type = Column(Enum(DataType), nullable=False)
@@ -75,6 +121,7 @@ class Job(Base):
     
     # Relationships
     template = relationship("Template", back_populates="jobs")
+    user = relationship("User", back_populates="jobs")
     
     def __repr__(self):
         return f"<Job(id={self.id}, type={self.data_type}, status={self.status})>"
@@ -83,7 +130,7 @@ class Job(Base):
         """Convert job to dictionary"""
         return {
             "id": str(self.id),
-            "user_id": self.user_id,
+            "user_id": str(self.user_id) if self.user_id else None,
             "data_type": self.data_type.value,
             "record_count": self.record_count,
             "output_format": self.output_format.value,
@@ -107,18 +154,19 @@ class Template(Base):
     __tablename__ = "templates"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String(255), nullable=False, unique=True, index=True)
+    name = Column(String(255), nullable=False, index=True)
     description = Column(Text, nullable=True)
     
     # Schema definition
     schema = Column(JSON, nullable=False)  # Field definitions
+    data_type = Column(String(50), nullable=True)  # Data type category
     
     # Template settings
     is_active = Column(Boolean, default=True)
     is_system = Column(Boolean, default=False)  # System templates can't be deleted
     
     # Metadata
-    user_id = Column(String(255), nullable=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -126,6 +174,7 @@ class Template(Base):
     
     # Relationships
     jobs = relationship("Job", back_populates="template")
+    user = relationship("User", back_populates="templates")
     
     def __repr__(self):
         return f"<Template(id={self.id}, name={self.name})>"
@@ -137,6 +186,7 @@ class Template(Base):
             "name": self.name,
             "description": self.description,
             "schema": self.schema,
+            "data_type": self.data_type,
             "is_active": self.is_active,
             "is_system": self.is_system,
             "created_at": self.created_at.isoformat() if self.created_at else None,

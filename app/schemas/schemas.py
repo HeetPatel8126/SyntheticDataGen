@@ -145,6 +145,27 @@ class GenerateRequest(BaseModel):
         }
 
 
+class PreviewRequest(BaseModel):
+    """Schema for data preview request - allows smaller record counts"""
+    data_type: DataType = Field(..., description="Type of data to generate")
+    record_count: int = Field(
+        default=10,
+        ge=1,
+        le=100,
+        description="Number of records to preview (1-100)"
+    )
+    output_format: OutputFormat = Field(default=OutputFormat.JSON, description="Output format")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "data_type": "user",
+                "record_count": 10,
+                "output_format": "json"
+            }
+        }
+
+
 class GenerateResponse(BaseModel):
     """Schema for generation job creation response"""
     job_id: UUID

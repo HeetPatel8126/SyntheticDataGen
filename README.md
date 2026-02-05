@@ -1,6 +1,6 @@
 # Synthetic Data Generation Platform
 
-A robust REST API backend for generating realistic synthetic data for testing, development, and demos.
+A full-stack application for generating realistic synthetic data for testing, development, and demos. Features a modern Next.js frontend with a FastAPI backend.
 
 ## 🚀 Features
 
@@ -8,23 +8,37 @@ A robust REST API backend for generating realistic synthetic data for testing, d
 - **Flexible Output**: Export as CSV or JSON formats
 - **Async Processing**: Large datasets (up to 1M records) processed in background with Celery
 - **Progress Tracking**: Real-time job status and progress updates
-- **Custom Templates**: Create your own data schemas (stretch goal)
+- **Custom Templates**: Create your own data schemas with custom fields
+- **User Authentication**: Secure JWT-based authentication with registration and login
+- **Modern Dashboard**: Premium web UI for managing data generation jobs
 - **API Key Authentication**: Simple and secure API access
 - **Auto Cleanup**: Automatic deletion of old generated files
 
 ## 📋 Tech Stack
 
+### Backend
 - **Framework**: FastAPI (Python 3.11+)
 - **Database**: PostgreSQL
 - **Job Queue**: Celery + Redis
 - **Data Generation**: Faker library
+- **Authentication**: JWT (JSON Web Tokens)
 - **File Storage**: Local filesystem (S3-ready architecture)
+
+### Frontend
+- **Framework**: Next.js 14+ (App Router)
+- **Styling**: Tailwind CSS
+- **UI Components**: shadcn/ui + Radix UI
+- **Animations**: Framer Motion
+- **Code Editor**: Monaco Editor
+- **Charts**: Recharts
+- **State Management**: Zustand
+- **API Client**: Axios with React Query
 
 ## 🏗️ Project Structure
 
 ```
 synthetic-data/
-├── app/
+├── app/                     # Backend application
 │   ├── __init__.py
 │   ├── main.py              # FastAPI application entry point
 │   ├── config.py            # Configuration settings
@@ -32,7 +46,8 @@ synthetic-data/
 │   ├── api/
 │   │   ├── __init__.py
 │   │   ├── routes.py        # API endpoints
-│   │   └── auth.py          # Authentication
+│   │   ├── auth.py          # Authentication utilities
+│   │   └── auth_routes.py   # Auth endpoints (register, login)
 │   ├── models/
 │   │   ├── __init__.py
 │   │   └── models.py        # SQLAlchemy models
@@ -54,19 +69,62 @@ synthetic-data/
 │       ├── __init__.py
 │       ├── celery_app.py    # Celery configuration
 │       └── tasks.py         # Background tasks
+├── frontend/                # Next.js frontend application
+│   ├── app/                 # App router pages
+│   │   ├── dashboard/       # Dashboard pages
+│   │   │   ├── generate/    # Data generation page
+│   │   │   ├── history/     # Job history page
+│   │   │   ├── templates/   # Template management
+│   │   │   └── settings/    # User settings
+│   │   ├── signin/          # Sign in page
+│   │   └── signup/          # Sign up page
+│   ├── components/          # React components
+│   │   ├── ui/              # shadcn/ui components
+│   │   └── animations/      # Animation components
+│   ├── hooks/               # Custom React hooks
+│   └── lib/                 # Utilities and API client
 ├── alembic/                 # Database migrations
 ├── tests/                   # Unit tests
 ├── generated_data/          # Generated files storage
 ├── docker-compose.yml       # Docker services
 ├── Dockerfile
+├── install.ps1              # Windows installation script
+├── install.sh               # Linux/Mac installation script
+├── start.ps1                # Windows quick start script
+├── start.sh                 # Linux/Mac quick start script
 ├── requirements.txt
-├── .env.example
 └── README.md
 ```
 
 ## 🚀 Quick Start
 
-### Option 1: Docker Compose (Recommended)
+### Option 1: Quick Install Scripts (Easiest)
+
+**Windows:**
+```powershell
+# Install dependencies
+.\install.ps1
+
+# Start both frontend and backend
+.\start.ps1
+```
+
+**Linux/Mac:**
+```bash
+# Install dependencies
+./install.sh
+
+# Start both frontend and backend
+./start.sh
+```
+
+This will:
+- Install backend Python dependencies
+- Run database migrations
+- Install frontend Node.js dependencies
+- Start both services (Frontend on port 3000, Backend on port 8000)
+
+### Option 2: Docker Compose (Recommended for Production)
 
 1. **Clone and setup**:
    ```bash
@@ -80,13 +138,14 @@ synthetic-data/
    docker-compose up -d
    ```
 
-3. **Access the API**:
-   - API: http://localhost:8000
+3. **Access the application**:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8000
    - Swagger Docs: http://localhost:8000/docs
    - ReDoc: http://localhost:8000/redoc
    - Flower (Celery Monitor): http://localhost:5555
 
-### Option 2: Local Development
+### Option 3: Manual Local Development
 
 1. **Prerequisites**:
    - Python 3.11+
@@ -127,11 +186,78 @@ synthetic-data/
 
    # Terminal 3 (optional): Start Celery beat for scheduled tasks
    celery -A app.workers.celery_app beat --loglevel=info
+
+   # Terminal 4: Start Frontend
+   cd frontend
+   npm install
+   npm run dev
    ```
+
+5. **Access the application**:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8000
+   - API Docs: http://localhost:8000/docs
 
 ## 📖 API Usage
 
-### Authentication
+### User Authentication
+
+The platform supports user registration and login with JWT tokens.
+
+#### Register a New User
+```bash
+POST /auth/register
+```
+
+**Request Body**:
+```json
+{
+  "email": "user@example.com",
+  "password": "yourpassword",
+  "full_name": "John Doe"
+}
+```
+
+**Response**:
+```json
+{
+  "access_token": "eyJ...",
+  "refresh_token": "eyJ...",
+  "token_type": "bearer",
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "full_name": "John Doe",
+    "is_active": true
+  }
+}
+```
+
+#### Login
+```bash
+POST /auth/login
+```
+
+**Request Body**:
+```json
+{
+  "email": "user@example.com",
+  "password": "yourpassword"
+}
+```
+
+#### Refresh Token
+```bash
+POST /auth/refresh
+```
+
+#### Get Current User
+```bash
+GET /auth/me
+Authorization: Bearer <access_token>
+```
+
+### API Key Authentication
 
 All API endpoints (except `/health`) require an API key. Include it in your requests:
 
@@ -311,6 +437,21 @@ Environment variables (see `.env.example`):
 - Configure CORS appropriately for your deployment
 - Use HTTPS in production
 - Consider rate limiting for public deployments
+- JWT tokens expire after a configurable time; use refresh tokens for long sessions
+
+## 🖥️ Frontend Dashboard
+
+The web dashboard provides a premium user experience for:
+
+- **Data Generation**: Select data type, record count, and output format with real-time previews
+- **Job History**: View all past generation jobs with status and download links
+- **Custom Templates**: Create and manage custom data schemas with a visual editor
+- **User Settings**: Manage account settings and API keys
+- **Real-time Progress**: Track job progress with animated UI components
+
+### Screenshots
+
+Access the dashboard at http://localhost:3000 after starting the application.
 
 ## 📝 License
 
@@ -319,7 +460,15 @@ MIT License
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
-4. Run tests
-5. Submit a pull request
+4. Run tests (`pytest`)
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+## 📚 Additional Documentation
+
+- [SETUP.md](SETUP.md) - Detailed setup instructions
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Production deployment guide
+- [Frontend README](frontend/README.md) - Frontend-specific documentation
