@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion"
 import { 
   Settings as SettingsIcon, 
@@ -35,6 +35,8 @@ import {
   SpotlightCard,
   AnimatedCheckmark
 } from "@/components/animations"
+import { useAuth } from "@/lib/auth-context"
+import { authApi } from "@/lib/api"
 
 // Animated Tab component
 function AnimatedTab({ 
@@ -383,13 +385,26 @@ function SaveButton({
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile')
   const [isLoading, setIsLoading] = useState(false)
+  const { user, refreshUser } = useAuth()
   
-  // Profile state
+  // Profile state - initialize from user
   const [profile, setProfile] = useState({
     firstName: '',
     lastName: '',
     email: '',
   })
+
+  // Populate profile from user data
+  useEffect(() => {
+    if (user) {
+      const parts = (user.full_name || '').split(' ')
+      setProfile({
+        firstName: parts[0] || '',
+        lastName: parts.slice(1).join(' ') || '',
+        email: user.email || '',
+      })
+    }
+  }, [user])
   
   // Notification state
   const [notifications, setNotifications] = useState({
@@ -423,12 +438,43 @@ export default function SettingsPage() {
     { id: 'security', label: 'Security', icon: Shield },
   ]
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsLoading(true)
-    setTimeout(() => {
+    try {
+      if (activeTab === 'security') {
+        // Handle password change
+        if (!passwords.current || !passwords.new || !passwords.confirm) {
+          toast.error('Please fill in all password fields')
+          setIsLoading(false)
+          return
+        }
+        if (passwords.new !== passwords.confirm) {
+          toast.error('New passwords do not match')
+          setIsLoading(false)
+          return
+        }
+        if (passwords.new.length < 6) {
+          toast.error('Password must be at least 6 characters')
+          setIsLoading(false)
+          return
+        }
+        await authApi.changePassword({ 
+          current_password: passwords.current, 
+          new_password: passwords.new 
+        })
+        setPasswords({ current: '', new: '', confirm: '' })
+        toast.success('Password changed successfully')
+      } else {
+        const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(' ')
+        await authApi.updateMe({ full_name: fullName || undefined, email: profile.email || undefined })
+        await refreshUser()
+        toast.success('Settings saved successfully')
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Failed to save settings')
+    } finally {
       setIsLoading(false)
-      toast.success('Settings saved successfully')
-    }, 1000)
+    }
   }
 
   return (

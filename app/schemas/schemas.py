@@ -99,8 +99,8 @@ class TemplateResponse(BaseModel):
     schema: Dict[str, Any]
     is_active: bool
     is_system: bool
-    created_at: datetime
-    updated_at: datetime
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True
@@ -204,7 +204,7 @@ class JobResponse(BaseModel):
     error_message: Optional[str]
     file_path: Optional[str]
     file_size: Optional[int]
-    metadata: Optional[Dict[str, Any]]
+    job_metadata: Optional[Dict[str, Any]] = Field(None)
     created_at: datetime
     started_at: Optional[datetime]
     completed_at: Optional[datetime]

@@ -24,7 +24,11 @@ from app.api.auth import (
     get_user_by_id,
     get_current_user,
     user_to_response,
+    verify_password,
+    get_password_hash,
 )
+from pydantic import BaseModel
+from typing import Optional
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -192,21 +196,64 @@ async def get_current_user_info(current_user = Depends(get_current_user)):
     return user_to_response(current_user)
 
 
+class UpdateProfileRequest(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
 @router.put("/me", response_model=UserResponse)
 async def update_current_user(
-    full_name: str = None,
+    data: UpdateProfileRequest,
     current_user = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Update current user's profile.
     """
-    if full_name is not None:
-        current_user.full_name = full_name
-        db.commit()
-        db.refresh(current_user)
+    if data.full_name is not None:
+        current_user.full_name = data.full_name
+    if data.email is not None:
+        # Check if email already taken
+        existing = get_user_by_email(db, data.email)
+        if existing and existing.id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already in use"
+            )
+        current_user.email = data.email
+    db.commit()
+    db.refresh(current_user)
     
     return user_to_response(current_user)
+
+
+@router.post("/change-password")
+async def change_password(
+    data: ChangePasswordRequest,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Change user's password. Requires current password verification.
+    """
+    if not verify_password(data.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect"
+        )
+    if len(data.new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be at least 6 characters"
+        )
+    current_user.hashed_password = get_password_hash(data.new_password)
+    db.commit()
+    return {"message": "Password changed successfully"}
 
 
 @router.post("/logout")

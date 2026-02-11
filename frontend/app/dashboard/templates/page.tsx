@@ -46,9 +46,11 @@ import {
 
 // Template category icons
 const categoryIcons: Record<string, typeof Users> = {
+  user: Users,
   users: Users,
   ecommerce: ShoppingCart,
   company: Building,
+  companies: Building,
   custom: Code,
 }
 

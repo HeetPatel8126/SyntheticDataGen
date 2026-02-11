@@ -50,7 +50,7 @@ class JobService:
             template_id=request.template_id,
             status=JobStatus.PENDING,
             progress=0.0,
-            metadata={
+            job_metadata={
                 "requested_at": datetime.utcnow().isoformat()
             }
         )
@@ -184,7 +184,7 @@ class JobService:
         job.completed_at = datetime.utcnow()
         
         if metadata:
-            job.metadata = {**(job.metadata or {}), **metadata}
+            job.job_metadata = {**(job.job_metadata or {}), **metadata}
         
         self.db.commit()
         self.db.refresh(job)

@@ -94,13 +94,13 @@ class Job(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True, index=True)
     
     # Job configuration
-    data_type = Column(Enum(DataType), nullable=False)
+    data_type = Column(Enum(DataType, values_callable=lambda x: [e.value for e in x]), nullable=False)
     record_count = Column(Integer, nullable=False)
-    output_format = Column(Enum(OutputFormat), default=OutputFormat.CSV)
+    output_format = Column(Enum(OutputFormat, values_callable=lambda x: [e.value for e in x]), default=OutputFormat.CSV)
     template_id = Column(UUID(as_uuid=True), ForeignKey("templates.id"), nullable=True)
     
     # Job status
-    status = Column(Enum(JobStatus), default=JobStatus.PENDING, index=True)
+    status = Column(Enum(JobStatus, values_callable=lambda x: [e.value for e in x]), default=JobStatus.PENDING, index=True)
     progress = Column(Float, default=0.0)  # 0.0 to 100.0
     error_message = Column(Text, nullable=True)
     retry_count = Column(Integer, default=0)

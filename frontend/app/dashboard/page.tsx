@@ -264,11 +264,11 @@ export default function DashboardPage() {
         />
         <StatCard
           title="Active Jobs"
-          value={recentJobs?.filter((j: any) => j.status === 'processing').length || 0}
+          value={stats?.active_jobs || 0}
           icon={Activity}
           color="green"
           delay={0.3}
-          isLoading={jobsLoading}
+          isLoading={statsLoading}
         />
         <StatCard
           title="Storage Used"
@@ -318,7 +318,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {[
-                { href: '/dashboard/generate?type=users', icon: Database, label: 'Generate User Data', color: 'purple' },
+                { href: '/dashboard/generate?type=user', icon: Database, label: 'Generate User Data', color: 'purple' },
                 { href: '/dashboard/generate?type=ecommerce', icon: FileText, label: 'Generate E-commerce Data', color: 'indigo' },
                 { href: '/dashboard/templates', icon: FileText, label: 'Browse Templates', color: 'blue' },
               ].map((item, i) => (

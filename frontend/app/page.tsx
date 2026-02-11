@@ -28,6 +28,7 @@ import { ScrollProgress, MouseScrollIndicator } from "@/components/animations/Sc
 import { MeshGradient, NoiseOverlay, GridPattern } from "@/components/animations/AnimatedGradient"
 import { TiltCard } from "@/components/animations/GlowingCard"
 import { cn } from "@/lib/utils"
+import { generatorApi } from "@/lib/api"
 
 // ============================================
 // ANIMATED HEADER / NAVBAR
@@ -91,7 +92,7 @@ function AnimatedHeader() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <Link href="/dashboard">
+              <Link href="/signin">
                 <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
                   Sign In
                 </Button>
@@ -104,7 +105,7 @@ function AnimatedHeader() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <Link href="/dashboard">
+              <Link href="/signup">
                 <Button variant="gradient" size="sm" className="btn-shine">
                   Get Started <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
@@ -232,7 +233,7 @@ function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
           >
-            <Link href="/dashboard">
+              <Link href="/signup">
               <motion.div
                 whileHover={{ scale: 1.02, boxShadow: "0 0 40px rgba(139, 92, 246, 0.4)" }}
                 whileTap={{ scale: 0.98 }}
@@ -314,12 +315,35 @@ function LivePreviewWidget() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [data, setData] = useState(sampleData)
   
+  // Load real data from API on mount
+  useEffect(() => {
+    generatorApi.preview({ data_type: 'user', record_count: 3, output_format: 'json' })
+      .then((result) => {
+        if (Array.isArray(result) && result.length > 0) {
+          setData(result.map((r: any) => ({
+            id: r.id?.slice(0, 12) || r.user_id?.slice(0, 12) || 'usr_' + Math.random().toString(36).slice(2, 10),
+            name: [r.first_name, r.last_name].filter(Boolean).join(' ') || r.name || 'Unknown',
+            email: r.email || 'user@example.com',
+          })))
+        }
+      })
+      .catch(() => { /* fallback to sample data */ })
+  }, [])
+  
   const regenerate = () => {
     setIsGenerating(true)
-    setTimeout(() => {
-      setData([...sampleData].sort(() => Math.random() - 0.5))
-      setIsGenerating(false)
-    }, 500)
+    generatorApi.preview({ data_type: 'user', record_count: 3, output_format: 'json' })
+      .then((result) => {
+        if (Array.isArray(result) && result.length > 0) {
+          setData(result.map((r: any) => ({
+            id: r.id?.slice(0, 12) || r.user_id?.slice(0, 12) || 'usr_' + Math.random().toString(36).slice(2, 10),
+            name: [r.first_name, r.last_name].filter(Boolean).join(' ') || r.name || 'Unknown',
+            email: r.email || 'user@example.com',
+          })))
+        }
+      })
+      .catch(() => setData([...sampleData].sort(() => Math.random() - 0.5)))
+      .finally(() => setIsGenerating(false))
   }
 
   return (
@@ -676,7 +700,7 @@ function CTASection() {
                   Join thousands of developers using SynthData to build better applications
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link href="/dashboard">
+                  <Link href="/signup">
                     <motion.div
                       whileHover={{ scale: 1.02, boxShadow: "0 0 50px rgba(139, 92, 246, 0.5)" }}
                       whileTap={{ scale: 0.98 }}

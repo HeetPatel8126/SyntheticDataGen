@@ -478,10 +478,79 @@ export default function GeneratePage() {
     previewData,
     setPreviewData,
     addJob,
+    updateJob,
   } = useGeneratorStore()
 
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [generationComplete, setGenerationComplete] = useState(false)
+  const [activeJobId, setActiveJobId] = useState<string | null>(null)
+  const [jobProgress, setJobProgress] = useState(0)
+  const [jobStatus, setJobStatus] = useState<string | null>(null)
+
+  // Poll for job status after generation
+  useEffect(() => {
+    if (!activeJobId) return
+    let cancelled = false
+
+    const poll = async () => {
+      try {
+        const job = await generatorApi.getJob(activeJobId)
+        if (cancelled) return
+        
+        setJobProgress(job.progress ?? 0)
+        setJobStatus(job.status)
+        
+        if (job.status === 'completed') {
+          setIsGenerating(false)
+          setGenerationComplete(true)
+          // Update the job in store
+          updateJob(activeJobId, { ...job })
+          
+          // Confetti celebration
+          const duration = 3 * 1000
+          const animationEnd = Date.now() + duration
+          const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 }
+          const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min
+          const interval: ReturnType<typeof setInterval> = setInterval(() => {
+            const timeLeft = animationEnd - Date.now()
+            if (timeLeft <= 0) return clearInterval(interval)
+            const particleCount = 50 * (timeLeft / duration)
+            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } })
+            confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } })
+          }, 250)
+          
+          toast.success('Generation complete!', {
+            description: `${formatNumber(recordCount)} records generated successfully`,
+            icon: <Sparkles className="w-5 h-5 text-green-500" />,
+            action: {
+              label: 'Download',
+              onClick: () => {
+                generatorApi.downloadJob(activeJobId, `${dataType}_${recordCount}.${outputFormat}`)
+              },
+            },
+          })
+          
+          setTimeout(() => { setGenerationComplete(false); setActiveJobId(null) }, 5000)
+          return
+        }
+
+        if (job.status === 'failed') {
+          setIsGenerating(false)
+          setActiveJobId(null)
+          toast.error('Generation failed', { description: job.error || 'Unknown error' })
+          return
+        }
+
+        // Still processing, poll again
+        setTimeout(poll, 1000)
+      } catch (err) {
+        if (!cancelled) setTimeout(poll, 2000)
+      }
+    }
+
+    poll()
+    return () => { cancelled = true }
+  }, [activeJobId])
 
   // Load preview data
   const { refetch: loadPreview, isFetching: previewLoading } = useQuery({
@@ -508,54 +577,26 @@ export default function GeneratePage() {
     mutationFn: generatorApi.generate,
     onSuccess: (job) => {
       addJob(job)
-      setGenerationComplete(true)
-      setIsGenerating(false)
-      
-      // Epic confetti celebration
-      const duration = 3 * 1000
-      const animationEnd = Date.now() + duration
-      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 }
-
-      const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min
-
-      const interval: ReturnType<typeof setInterval> = setInterval(() => {
-        const timeLeft = animationEnd - Date.now()
-
-        if (timeLeft <= 0) {
-          return clearInterval(interval)
-        }
-
-        const particleCount = 50 * (timeLeft / duration)
-        
-        confetti({
-          ...defaults,
-          particleCount,
-          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
-        })
-        confetti({
-          ...defaults,
-          particleCount,
-          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
-        })
-      }, 250)
+      setActiveJobId(job.id)
+      setJobProgress(0)
+      setJobStatus('pending')
       
       toast.success('Generation started!', {
-        description: `Job ${job.id} is now processing`,
+        description: `Generating ${formatNumber(recordCount)} ${dataType} records...`,
         icon: <Sparkles className="w-5 h-5 text-purple-500" />,
       })
-
-      setTimeout(() => setGenerationComplete(false), 3000)
     },
     onError: (error: any) => {
       setIsGenerating(false)
       toast.error('Generation failed', {
-        description: error.message || 'Something went wrong',
+        description: error.response?.data?.error || error.message || 'Something went wrong',
       })
     },
   })
 
   const handleGenerate = () => {
     setIsGenerating(true)
+    setGenerationComplete(false)
     generateMutation.mutate({
       data_type: dataType,
       record_count: recordCount,
@@ -737,6 +778,66 @@ export default function GeneratePage() {
               onClick={handleGenerate}
             />
           </FadeInWhenVisible>
+
+          {/* Job Progress */}
+          <AnimatePresence>
+            {(isGenerating || generationComplete) && activeJobId && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                <Card className="border-white/10 overflow-hidden">
+                  <CardContent className="pt-6 space-y-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-400 flex items-center gap-2">
+                        {jobStatus === 'completed' ? (
+                          <Check className="w-4 h-4 text-green-400" />
+                        ) : (
+                          <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
+                        )}
+                        {jobStatus === 'completed' ? 'Completed' :
+                         jobStatus === 'processing' ? 'Processing...' :
+                         'Queued...'}
+                      </span>
+                      <span className="font-mono text-purple-400">{Math.round(jobProgress)}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                      <motion.div
+                        className={cn(
+                          "h-full rounded-full",
+                          jobStatus === 'completed'
+                            ? "bg-gradient-to-r from-green-500 to-emerald-500"
+                            : "bg-gradient-to-r from-purple-500 to-indigo-500"
+                        )}
+                        initial={{ width: '0%' }}
+                        animate={{ width: `${jobProgress}%` }}
+                        transition={{ duration: 0.5 }}
+                      />
+                    </div>
+                    {jobStatus === 'completed' && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                      >
+                        <Button
+                          variant="outline"
+                          className="w-full gap-2 border-green-500/30 hover:border-green-500/50 hover:bg-green-500/10 text-green-400"
+                          onClick={() => {
+                            generatorApi.downloadJob(activeJobId, `${dataType}_${recordCount}.${outputFormat}`)
+                            toast.success('Download started')
+                          }}
+                        >
+                          <Download className="w-4 h-4" />
+                          Download {outputFormat.toUpperCase()} File
+                        </Button>
+                      </motion.div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Estimated time */}
           <motion.div

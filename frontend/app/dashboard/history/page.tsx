@@ -27,7 +27,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { generatorApi, Job } from "@/lib/api"
-import { formatDate, formatNumber, formatBytes, downloadFile } from "@/lib/utils"
+import { formatDate, formatNumber, formatBytes } from "@/lib/utils"
 import { JOB_STATUSES } from "@/lib/constants"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
@@ -330,9 +330,8 @@ export default function HistoryPage() {
 
   const downloadMutation = useMutation({
     mutationFn: async (job: Job) => {
-      const blob = await generatorApi.downloadJob(job.id)
       const filename = `${job.data_type}_${job.record_count}.${job.output_format}`
-      downloadFile(await blob.text(), filename, blob.type)
+      await generatorApi.downloadJob(job.id, filename)
     },
     onSuccess: () => {
       toast.success('Download started', {

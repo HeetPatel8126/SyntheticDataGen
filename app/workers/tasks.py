@@ -132,8 +132,8 @@ def generate_data_task(
         job.file_path = filename  # Store relative filename
         job.file_size = result["file_size"]
         job.completed_at = datetime.utcnow()
-        job.metadata = {
-            **(job.metadata or {}),
+        job.job_metadata = {
+            **(job.job_metadata or {}),
             "generation_time_seconds": result["generation_time_seconds"],
             "generated_at": result["generated_at"]
         }
