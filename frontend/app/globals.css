@@ -82,11 +82,20 @@
   }
   
   .glass {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+    @apply bg-white/[0.04] backdrop-blur-2xl border border-white/[0.06];
   }
   
   .glass-card {
-    @apply bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] shadow-2xl;
+    @apply bg-[#111113]/80 backdrop-blur-2xl border border-white/[0.06] shadow-2xl;
+  }
+  
+  .glass-card-hover {
+    @apply bg-[#111113]/80 backdrop-blur-2xl border border-white/[0.06] shadow-2xl 
+           transition-all duration-500 hover:border-white/[0.1] hover:shadow-purple-500/[0.05] hover:-translate-y-0.5;
+  }
+  
+  .premium-surface {
+    @apply bg-[#111113]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl;
   }
   
   .grid-pattern {
@@ -133,11 +142,11 @@
   
   /* Card hover effects */
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-1;
+    @apply transition-all duration-500 hover:shadow-xl hover:shadow-purple-500/[0.06] hover:-translate-y-0.5 hover:border-white/[0.1];
   }
   
   .card-hover-glow {
-    @apply transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/20 hover:border-purple-500/30;
+    @apply transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/[0.1] hover:border-purple-500/20;
   }
   
   /* Button shine effect */
@@ -167,23 +176,23 @@
   }
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar - minimal & premium */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #111111;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #262626;
-  border-radius: 5px;
+  background: #1a1a1e;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #333333;
+  background: #2a2a30;
 }
 
 /* Monaco Editor theme adjustments */

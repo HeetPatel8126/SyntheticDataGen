@@ -50,7 +50,7 @@ function DataTypeCard({
   isSelected, 
   onClick 
 }: { 
-  type: typeof DATA_TYPES[0]
+  type: (typeof DATA_TYPES)[number]
   isSelected: boolean
   onClick: () => void
 }) {
@@ -222,7 +222,7 @@ function GenerateButton({
             </>
           ) : generationComplete ? (
             <>
-              <AnimatedCheckmark size={20} color="white" />
+              <AnimatedCheckmark size={20} className="text-white" />
               <span>Generation Complete!</span>
             </>
           ) : (
