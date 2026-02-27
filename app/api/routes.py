@@ -20,13 +20,25 @@ from app.database import get_db
 from app.api.auth import verify_api_key, get_current_user_id
 from app.models import Job, Template, JobStatus, DataType, OutputFormat
 from app.schemas import (
-    GenerateRequest, GenerateResponse, PreviewRequest,
-    JobResponse, JobStatusResponse, JobListResponse,
-    TemplateCreate, TemplateResponse, TemplateListResponse,
-    DataTypeInfo, DataTypeFieldInfo, DataTypeListResponse,
-    ErrorResponse, SuccessResponse
+    GenerateRequest,
+    GenerateResponse,
+    PreviewRequest,
+    JobResponse,
+    JobStatusResponse,
+    JobListResponse,
+    TemplateCreate,
+    TemplateResponse,
+    TemplateListResponse,
+    DataTypeInfo,
+    DataTypeFieldInfo,
+    DataTypeListResponse,
+    ErrorResponse,
+    SuccessResponse,
+    SchemaFromDescriptionRequest,
+    AISchemaResponse,
 )
 from app.services.generators import GeneratorFactory
+from app.services.ai_schema_service import AISchemaService
 from app.services.file_service import FileService
 from app.services.job_service import JobService
 from app.workers.tasks import generate_data_task
@@ -36,6 +48,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 file_service = FileService()
+ai_schema_service = AISchemaService()
 
 
 # ============== Data Generation Endpoints ==============
@@ -154,7 +167,8 @@ async def create_generation_job(
 async def get_job_status(
     job_id: UUID,
     db: Session = Depends(get_db),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
+    user_id: str = Depends(get_current_user_id)
 ):
     """
     Get the status of a generation job.
@@ -170,6 +184,13 @@ async def get_job_status(
     job = job_service.get_job(job_id)
     
     if not job:
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail=f"Job with ID {job_id} not found"
+        )
+    
+    # Enforce ownership
+    if user_id and job.user_id and str(job.user_id) != user_id:
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND,
             detail=f"Job with ID {job_id} not found"
@@ -199,13 +220,21 @@ async def get_job_status(
 async def get_job_details(
     job_id: UUID,
     db: Session = Depends(get_db),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
+    user_id: str = Depends(get_current_user_id)
 ):
     """Get complete job details including configuration and file information."""
     job_service = JobService(db)
     job = job_service.get_job(job_id)
     
     if not job:
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail=f"Job with ID {job_id} not found"
+        )
+    
+    # Enforce ownership
+    if user_id and job.user_id and str(job.user_id) != user_id:
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND,
             detail=f"Job with ID {job_id} not found"
@@ -227,7 +256,8 @@ async def get_job_details(
 async def download_job_file(
     job_id: UUID,
     db: Session = Depends(get_db),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
+    user_id: str = Depends(get_current_user_id)
 ):
     """
     Download the generated data file.
@@ -238,6 +268,13 @@ async def download_job_file(
     job = job_service.get_job(job_id)
     
     if not job:
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail=f"Job with ID {job_id} not found"
+        )
+    
+    # Enforce ownership
+    if user_id and job.user_id and str(job.user_id) != user_id:
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND,
             detail=f"Job with ID {job_id} not found"
@@ -352,13 +389,21 @@ async def list_jobs(
 async def delete_job(
     job_id: UUID,
     db: Session = Depends(get_db),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
+    user_id: str = Depends(get_current_user_id)
 ):
     """Delete a job and clean up its generated file if exists."""
     job_service = JobService(db)
     job = job_service.get_job(job_id)
     
     if not job:
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail=f"Job with ID {job_id} not found"
+        )
+    
+    # Enforce ownership
+    if user_id and job.user_id and str(job.user_id) != user_id:
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND,
             detail=f"Job with ID {job_id} not found"
@@ -621,3 +666,37 @@ async def get_stats(
         "jobs": job_stats,
         "storage": storage_stats
     }
+
+
+# ============== AI-Assisted Schema Builder ==============
+
+
+@router.post(
+    "/schema/generate-from-description",
+    response_model=AISchemaResponse,
+    summary="Generate schema from natural language description",
+    description="Use Google Gemini 2.0 Flash to generate a JSON schema from a plain English dataset description.",
+)
+async def generate_schema_from_description(
+    body: SchemaFromDescriptionRequest,
+    api_key: bool = Depends(verify_api_key),
+    user_id: Optional[str] = Depends(get_current_user_id),
+):
+    """
+    Generate a structured JSON schema from a natural language dataset description.
+    """
+    try:
+        raw_schema = ai_schema_service.generate_schema(body.description)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        )
+    except Exception as exc:
+        logger.exception("AI schema generation failed: %s", exc)
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="Failed to generate schema from description.",
+        )
+
+    return AISchemaResponse.model_validate(raw_schema)

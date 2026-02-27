@@ -7,6 +7,10 @@ import {
   Users, 
   ShoppingCart, 
   Building2, 
+  Heart,
+  DollarSign,
+  GraduationCap,
+  Share2,
   Sparkles, 
   Download,
   Settings2,
@@ -42,6 +46,10 @@ const iconMap = {
   Users,
   ShoppingCart,
   Building2,
+  Heart,
+  DollarSign,
+  GraduationCap,
+  Share2,
 }
 
 // Animated data type card

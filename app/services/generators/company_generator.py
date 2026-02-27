@@ -4,7 +4,7 @@ Generates realistic company and business data
 """
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional
 import random
 
@@ -335,5 +335,5 @@ class CompanyGenerator(BaseGenerator):
             "ceo_name": ceo_name,
             "description": description,
             "is_active": random.random() > 0.05,  # 95% active
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         }

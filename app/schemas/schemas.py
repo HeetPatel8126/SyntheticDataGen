@@ -10,28 +10,8 @@ from enum import Enum
 
 from app.config import settings
 
-
-class DataType(str, Enum):
-    """Supported data types for generation"""
-    USER = "user"
-    ECOMMERCE = "ecommerce"
-    COMPANY = "company"
-    CUSTOM = "custom"
-
-
-class OutputFormat(str, Enum):
-    """Supported output formats"""
-    CSV = "csv"
-    JSON = "json"
-
-
-class JobStatus(str, Enum):
-    """Job status enumeration"""
-    PENDING = "pending"
-    PROCESSING = "processing"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    CANCELLED = "cancelled"
+# Re-export enums from models to avoid duplication
+from app.models.models import DataType, OutputFormat, JobStatus
 
 
 class FieldType(str, Enum):
@@ -48,7 +28,16 @@ class FieldType(str, Enum):
     NAME = "name"
     COMPANY = "company"
     UUID = "uuid"
-    CHOICE = "choice"
+    CHOICE = "choice"  # legacy alias for enum
+    ENUM = "enum"
+    REGEX = "regex"
+    DISTRIBUTION = "distribution"
+    PERCENTAGE = "percentage"
+    PRICE = "price"
+    LATITUDE = "latitude"
+    LONGITUDE = "longitude"
+    DATE_RANGE = "date_range"
+    BOOLEAN_WEIGHTED = "boolean_weighted"
 
 
 # ============== Template Schemas ==============
@@ -308,3 +297,80 @@ class HealthResponse(BaseModel):
     database: str = "connected"
     redis: str = "connected"
     timestamp: datetime
+
+
+# ============== Upload / SDV Schemas ==============
+
+
+class UploadSchemaPreview(BaseModel):
+    """Schema preview for an uploaded dataset."""
+    column_stats: Dict[str, Any]
+    preview_rows: List[Dict[str, Any]]
+
+
+class UploadResponse(BaseModel):
+    """Response for a successful upload."""
+    upload_id: UUID
+    schema_preview: UploadSchemaPreview
+
+
+class GenerateFromUploadRequest(BaseModel):
+    """Request body for generating synthetic data from an uploaded dataset."""
+    upload_id: UUID
+    record_count: int = Field(
+        default=settings.default_records,
+        ge=1,
+        le=settings.max_records,
+        description="Number of synthetic records to generate from the uploaded data",
+    )
+
+
+class GenerateFromUploadResponse(BaseModel):
+    """Synthetic data generated from an uploaded dataset."""
+    data: List[Dict[str, Any]]
+
+
+class UploadedFileInfo(BaseModel):
+    """Metadata about an uploaded dataset and its fitted model."""
+    id: UUID
+    filename: str
+    file_path: str
+    model_path: Optional[str]
+    column_stats: Optional[Dict[str, Any]] = None
+    row_count: Optional[int] = None
+    column_count: Optional[int] = None
+    created_at: datetime
+    model_fitted: bool
+
+    class Config:
+        from_attributes = True
+
+
+class UploadListResponse(BaseModel):
+    """List of uploaded datasets for the current user."""
+    uploads: List[UploadedFileInfo]
+    total: int
+
+
+# ============== AI Schema Generation Schemas ==============
+
+
+class SchemaFromDescriptionRequest(BaseModel):
+    """Request body for AI-assisted schema generation."""
+    description: str = Field(..., min_length=3, max_length=2000)
+
+
+class AISchemaField(BaseModel):
+    name: str
+    field_type: str
+    nullable: bool
+    enum_values: Optional[List[str]] = None
+    min: Optional[str] = None
+    max: Optional[str] = None
+    regex_pattern: Optional[str] = None
+
+
+class AISchemaResponse(BaseModel):
+    table_name: str
+    description: str
+    fields: List[AISchemaField]

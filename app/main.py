@@ -4,26 +4,40 @@ Main FastAPI Application Entry Point
 """
 
 import logging
+import sys
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
 from app.database import init_db, engine, Base
 from app.api.routes import router as api_router
 from app.api.auth_routes import router as auth_router
+from app.api.upload_routes import router as upload_router
 from app import __version__
 
-# Configure logging
+# Configure structured logging
+log_format = (
+    '{"time":"%(asctime)s","level":"%(levelname)s","logger":"%(name)s","message":"%(message)s"}'
+    if not settings.debug
+    else "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logging.basicConfig(
     level=logging.DEBUG if settings.debug else logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    format=log_format,
+    stream=sys.stdout,
 )
 logger = logging.getLogger(__name__)
+
+# Rate limiter
+limiter = Limiter(key_func=get_remote_address, default_limits=[f"{settings.rate_limit_requests}/minute"])
 
 
 @asynccontextmanager
@@ -87,13 +101,17 @@ All endpoints require an API key. Include it in your request:
     lifespan=lifespan
 )
 
+# Wire up rate limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-API-Key"],
 )
 
 
@@ -129,11 +147,11 @@ async def general_exception_handler(request: Request, exc: Exception):
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     """Log all incoming requests"""
-    start_time = datetime.utcnow()
+    start_time = datetime.now(timezone.utc)
     
     response = await call_next(request)
     
-    process_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+    process_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
     logger.info(
         f"{request.method} {request.url.path} - "
         f"Status: {response.status_code} - "
@@ -155,7 +173,7 @@ async def health_check():
         "version": __version__,
         "app_name": settings.app_name,
         "environment": settings.app_env,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
 
@@ -197,6 +215,13 @@ app.include_router(
     api_router,
     prefix=settings.api_prefix,
     tags=["API"]
+)
+
+# Include Upload/SDV router with prefix
+app.include_router(
+    upload_router,
+    prefix=settings.api_prefix,
+    tags=["Uploads"]
 )
 
 

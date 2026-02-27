@@ -26,6 +26,7 @@ from app.api.auth import (
     user_to_response,
     verify_password,
     get_password_hash,
+    validate_password_strength,
 )
 from pydantic import BaseModel
 from typing import Optional
@@ -50,12 +51,8 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
             detail="Email already registered"
         )
     
-    # Validate password
-    if len(user_data.password) < 6:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Password must be at least 6 characters"
-        )
+    # Validate password strength
+    validate_password_strength(user_data.password)
     
     # Create user
     user = create_user(db, user_data)
@@ -246,11 +243,7 @@ async def change_password(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Current password is incorrect"
         )
-    if len(data.new_password) < 6:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="New password must be at least 6 characters"
-        )
+    validate_password_strength(data.new_password)
     current_user.hashed_password = get_password_hash(data.new_password)
     db.commit()
     return {"message": "Password changed successfully"}

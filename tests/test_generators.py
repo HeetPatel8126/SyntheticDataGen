@@ -216,7 +216,7 @@ class TestGeneratorFactory:
     def test_get_all_info(self):
         """Test getting all generator info"""
         info = GeneratorFactory.get_all_info()
-        assert len(info) == 3
+        assert len(info) == 7
         
         names = [i["name"] for i in info]
         assert "user" in names

@@ -8,6 +8,11 @@ from app.services.generators.base import BaseGenerator
 from app.services.generators.user_generator import UserGenerator
 from app.services.generators.ecommerce_generator import EcommerceGenerator
 from app.services.generators.company_generator import CompanyGenerator
+from app.services.generators.healthcare_generator import HealthcareGenerator
+from app.services.generators.financial_generator import FinancialGenerator
+from app.services.generators.education_generator import EducationGenerator
+from app.services.generators.social_media_generator import SocialMediaGenerator
+from app.services.generators.custom_generator import CustomTemplateGenerator
 
 
 class GeneratorFactory:
@@ -20,6 +25,11 @@ class GeneratorFactory:
         "user": UserGenerator,
         "ecommerce": EcommerceGenerator,
         "company": CompanyGenerator,
+        "healthcare": HealthcareGenerator,
+        "financial": FinancialGenerator,
+        "education": EducationGenerator,
+        "social_media": SocialMediaGenerator,
+        # 'custom' handled specially because it needs template schema
     }
     
     @classmethod
@@ -27,15 +37,17 @@ class GeneratorFactory:
         cls,
         data_type: str,
         locale: str = "en_US",
-        seed: Optional[int] = None
+        seed: Optional[int] = None,
+        template_schema: Optional[Dict[str, Any]] = None,
     ) -> BaseGenerator:
         """
         Get a generator instance for the specified data type.
         
         Args:
-            data_type: Type of data to generate (user, ecommerce, company)
+            data_type: Type of data to generate (user, ecommerce, company, custom)
             locale: Locale for Faker
             seed: Random seed for reproducibility
+            template_schema: Template schema dict (required for custom data type)
             
         Returns:
             BaseGenerator instance
@@ -43,10 +55,15 @@ class GeneratorFactory:
         Raises:
             ValueError: If data type is not supported
         """
+        if data_type.lower() == "custom":
+            if not template_schema:
+                raise ValueError("Template schema is required for custom data type.")
+            return CustomTemplateGenerator(schema=template_schema, locale=locale, seed=seed)
+
         generator_class = cls._generators.get(data_type.lower())
         
         if generator_class is None:
-            supported = ", ".join(cls._generators.keys())
+            supported = ", ".join(list(cls._generators.keys()) + ["custom"])
             raise ValueError(
                 f"Unknown data type: {data_type}. Supported types: {supported}"
             )
@@ -61,7 +78,7 @@ class GeneratorFactory:
         Returns:
             List of supported data type names
         """
-        return list(cls._generators.keys())
+        return list(cls._generators.keys()) + ["custom"]
     
     @classmethod
     def get_all_info(cls) -> List[Dict[str, Any]]:

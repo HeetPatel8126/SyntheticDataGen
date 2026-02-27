@@ -3,35 +3,38 @@ version: '3.8'
 services:
   # PostgreSQL Database
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: synthetic_data_postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: synthetic_data
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-synthetic_data}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   # Redis for Celery
   redis:
     image: redis:7-alpine
     container_name: synthetic_data_redis
+    command: redis-server --requirepass ${REDIS_PASSWORD:-changeme}
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-changeme}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   # FastAPI Application
   api:
@@ -39,25 +42,32 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: synthetic_data_api
+    env_file: .env
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/synthetic_data
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - API_KEY=dev-api-key-123456
-      - DEBUG=true
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-synthetic_data}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
       - STORAGE_PATH=/app/generated_data
+      - MODEL_STORAGE_PATH=/app/fitted_models
     ports:
       - "8000:8000"
     volumes:
-      - ./generated_data:/app/generated_data
-      - .:/app
+      - generated_data:/app/generated_data
+      - fitted_models:/app/fitted_models
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+    restart: unless-stopped
 
   # Celery Worker
   celery_worker:
@@ -65,21 +75,29 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: synthetic_data_celery_worker
+    env_file: .env
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/synthetic_data
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-synthetic_data}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
       - STORAGE_PATH=/app/generated_data
+      - MODEL_STORAGE_PATH=/app/fitted_models
     volumes:
-      - ./generated_data:/app/generated_data
-      - .:/app
+      - generated_data:/app/generated_data
+      - fitted_models:/app/fitted_models
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "celery", "-A", "app.workers.celery_app", "inspect", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=4
+    restart: unless-stopped
 
   # Celery Beat (Scheduler)
   celery_beat:
@@ -87,16 +105,31 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: synthetic_data_celery_beat
+    env_file: .env
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/synthetic_data
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-    volumes:
-      - .:/app
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-synthetic_data}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
     depends_on:
       - celery_worker
     command: celery -A app.workers.celery_app beat --loglevel=info
+    restart: unless-stopped
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: synthetic_data_frontend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://api:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
 
   # Flower - Celery Monitoring (Optional)
   flower:
@@ -104,18 +137,22 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: synthetic_data_flower
+    env_file: .env
     environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD:-changeme}@redis:6379/0
     ports:
       - "5555:5555"
     depends_on:
       - celery_worker
-    command: celery -A app.workers.celery_app flower --port=5555
+    command: celery -A app.workers.celery_app flower --port=5555 --basic_auth=${FLOWER_USER:-admin}:${FLOWER_PASSWORD:-changeme}
+    restart: unless-stopped
 
 volumes:
   postgres_data:
   redis_data:
+  generated_data:
+  fitted_models:
 
 networks:
   default:

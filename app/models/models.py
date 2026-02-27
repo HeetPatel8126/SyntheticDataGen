@@ -4,7 +4,7 @@ SQLAlchemy Database Models
 
 import enum
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import (
     Column, String, Integer, Float, DateTime, 
     Text, JSON, Enum, Boolean, ForeignKey
@@ -29,6 +29,10 @@ class DataType(str, enum.Enum):
     USER = "user"
     ECOMMERCE = "ecommerce"
     COMPANY = "company"
+    HEALTHCARE = "healthcare"
+    FINANCIAL = "financial"
+    EDUCATION = "education"
+    SOCIAL_MEDIA = "social_media"
     CUSTOM = "custom"
 
 
@@ -58,13 +62,14 @@ class User(Base):
     storage_used = Column(Integer, default=0)  # bytes
     
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    last_login = Column(DateTime, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    last_login = Column(DateTime(timezone=True), nullable=True)
     
     # Relationships
     jobs = relationship("Job", back_populates="user")
     templates = relationship("Template", back_populates="user")
+    uploaded_files = relationship("UploadedFile", back_populates="user")
     
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email})>"
@@ -114,10 +119,10 @@ class Job(Base):
     job_metadata = Column(JSON, nullable=True)  # Additional job metadata
     
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow, index=True)
-    started_at = Column(DateTime, nullable=True)
-    completed_at = Column(DateTime, nullable=True)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    started_at = Column(DateTime(timezone=True), nullable=True)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     # Relationships
     template = relationship("Template", back_populates="jobs")
@@ -169,8 +174,8 @@ class Template(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     # Relationships
     jobs = relationship("Job", back_populates="template")
@@ -192,3 +197,30 @@ class Template(Base):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+
+
+class UploadedFile(Base):
+    """
+    Uploaded file model for SDV-based synthetic data generation.
+    Stores metadata about user-uploaded real datasets and fitted models.
+    """
+    __tablename__ = "uploaded_files"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True, index=True)
+    
+    filename = Column(String(255), nullable=False)
+    file_path = Column(String(500), nullable=False)
+    model_path = Column(String(500), nullable=True)
+    column_stats = Column(JSON, nullable=True)
+    
+    row_count = Column(Integer, nullable=True)
+    column_count = Column(Integer, nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    
+    # Relationships
+    user = relationship("User", back_populates="uploaded_files")
+    
+    def __repr__(self):
+        return f"<UploadedFile(id={self.id}, filename={self.filename})>"

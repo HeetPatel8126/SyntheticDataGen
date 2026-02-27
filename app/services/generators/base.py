@@ -7,9 +7,10 @@ import csv
 import json
 import os
 import uuid
+import random
 from abc import ABC, abstractmethod
-from datetime import datetime
-from typing import Dict, List, Any, Generator, Optional, Callable
+from datetime import datetime, timezone, date
+from typing import Dict, List, Any, Generator, Optional, Callable, Tuple
 from faker import Faker
 
 from app.config import settings
@@ -121,7 +122,7 @@ class BaseGenerator(ABC):
         Returns:
             Dictionary with file metadata
         """
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         
         # Ensure directory exists
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
@@ -145,7 +146,7 @@ class BaseGenerator(ABC):
                 writer.writerow(self._serialize_record(record))
                 records_written += 1
         
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         file_size = os.path.getsize(file_path)
         
         return {
@@ -175,7 +176,7 @@ class BaseGenerator(ABC):
         Returns:
             Dictionary with file metadata
         """
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         
         # Ensure directory exists
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
@@ -196,7 +197,7 @@ class BaseGenerator(ABC):
             
             jsonfile.write('\n]')
         
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         file_size = os.path.getsize(file_path)
         
         return {
@@ -223,6 +224,8 @@ class BaseGenerator(ABC):
         for key, value in record.items():
             if isinstance(value, datetime):
                 serialized[key] = value.isoformat()
+            elif isinstance(value, date):
+                serialized[key] = value.isoformat()
             elif isinstance(value, uuid.UUID):
                 serialized[key] = str(value)
             elif isinstance(value, (list, dict)):
@@ -230,6 +233,63 @@ class BaseGenerator(ABC):
             else:
                 serialized[key] = value
         return serialized
+    
+    # ----- Helpers for advanced field types used by custom templates -----
+
+    def _random_distribution(
+        self,
+        distribution: str,
+        min_value: Optional[float] = None,
+        max_value: Optional[float] = None,
+        mean: Optional[float] = None,
+        std: Optional[float] = None,
+    ) -> float:
+        """
+        Draw a random value from a simple distribution and clamp to min/max.
+        Supported distributions: normal, uniform, pareto.
+        """
+        distribution = (distribution or "").lower()
+
+        if distribution == "uniform":
+            low = min_value if min_value is not None else 0.0
+            high = max_value if max_value is not None else low + 1.0
+            value = random.uniform(low, high)
+        elif distribution == "pareto":
+            alpha = std if std and std > 0 else 1.5
+            base = random.paretovariate(alpha)
+            value = base
+        else:  # default to normal
+            mu = mean if mean is not None else 0.0
+            sigma = std if std and std > 0 else 1.0
+            value = random.gauss(mu, sigma)
+
+        if min_value is not None:
+            value = max(min_value, value)
+        if max_value is not None:
+            value = min(max_value, value)
+        return value
+
+    def _random_percentage(
+        self,
+        min_value: float = 0.0,
+        max_value: float = 100.0,
+    ) -> float:
+        return round(random.uniform(min_value, max_value), 2)
+
+    def _random_price(
+        self,
+        min_value: float = 0.0,
+        max_value: float = 1000.0,
+    ) -> float:
+        value = random.uniform(min_value, max_value)
+        return round(value, 2)
+
+    def _random_latitude(self) -> float:
+        return round(random.uniform(-90.0, 90.0), 6)
+
+    def _random_longitude(self) -> float:
+        return round(random.uniform(-180.0, 180.0), 6)
+
     
     def get_info(self) -> Dict[str, Any]:
         """

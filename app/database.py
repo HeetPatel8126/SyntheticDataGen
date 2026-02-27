@@ -3,11 +3,16 @@ Database configuration and session management
 """
 
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session, DeclarativeBase
 from typing import Generator
 
 from app.config import settings
+
+
+class Base(DeclarativeBase):
+    """Declarative base for all models"""
+    pass
+
 
 # Create database engine
 engine = create_engine(
@@ -15,14 +20,12 @@ engine = create_engine(
     echo=settings.database_echo,
     pool_pre_ping=True,
     pool_size=10,
-    max_overflow=20
+    max_overflow=20,
+    pool_recycle=3600,  # recycle connections after 1 hour
 )
 
 # Create session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Create base class for models
-Base = declarative_base()
 
 
 def get_db() -> Generator[Session, None, None]:

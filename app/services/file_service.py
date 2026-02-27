@@ -5,7 +5,7 @@ Handles file storage, retrieval, and cleanup operations
 
 import os
 import shutil
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 import logging
@@ -67,7 +67,7 @@ class FileService:
         Returns:
             Generated filename
         """
-        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         return f"{data_type}_{timestamp}_{job_id[:8]}.{output_format}"
     
     def file_exists(self, filename: str) -> bool:
@@ -198,13 +198,13 @@ class FileService:
             Number of files deleted
         """
         max_age = max_age_days or settings.max_file_age_days
-        cutoff_date = datetime.utcnow() - timedelta(days=max_age)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=max_age)
         
         deleted_count = 0
         
         for file_path in self.storage_path.glob("*"):
             if file_path.is_file():
-                file_time = datetime.fromtimestamp(file_path.stat().st_mtime)
+                file_time = datetime.fromtimestamp(file_path.stat().st_mtime, tz=timezone.utc)
                 
                 if file_time < cutoff_date:
                     try:

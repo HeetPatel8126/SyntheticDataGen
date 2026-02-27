@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.config import settings
 from app.database import Base
-from app.models import Job, Template  # Import all models
+from app.models import Job, Template, UploadedFile  # Import all models
 
 # this is the Alembic Config object
 config = context.config

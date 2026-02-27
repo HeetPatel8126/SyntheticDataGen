@@ -3,7 +3,8 @@ API Authentication with JWT
 Secure JWT-based authentication for user management
 """
 
-from datetime import datetime, timedelta
+import re
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import UUID
 
@@ -83,6 +84,29 @@ class RefreshTokenRequest(BaseModel):
 
 
 # ============================================
+# Password Validation
+# ============================================
+
+def validate_password_strength(password: str) -> None:
+    """
+    Validate password meets strength requirements.
+    Raises HTTPException if password is too weak.
+    """
+    errors = []
+    if len(password) < settings.min_password_length:
+        errors.append(f"Password must be at least {settings.min_password_length} characters")
+    if settings.require_password_uppercase and not re.search(r'[A-Z]', password):
+        errors.append("Password must contain at least one uppercase letter")
+    if settings.require_password_digit and not re.search(r'\d', password):
+        errors.append("Password must contain at least one digit")
+    if errors:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="; ".join(errors)
+        )
+
+
+# ============================================
 # Helper Functions
 # ============================================
 
@@ -101,7 +125,7 @@ def get_password_hash(password: str) -> str:
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """Create JWT access token"""
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=settings.access_token_expire_minutes))
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=settings.access_token_expire_minutes))
     to_encode.update({"exp": expire, "type": "access"})
     return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
@@ -109,7 +133,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 def create_refresh_token(data: dict) -> str:
     """Create JWT refresh token"""
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(days=settings.refresh_token_expire_days)
+    expire = datetime.now(timezone.utc) + timedelta(days=settings.refresh_token_expire_days)
     to_encode.update({"exp": expire, "type": "refresh"})
     return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
@@ -170,7 +194,7 @@ def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
 
 def update_last_login(db: Session, user: User) -> None:
     """Update user's last login timestamp"""
-    user.last_login = datetime.utcnow()
+    user.last_login = datetime.now(timezone.utc)
     db.commit()
 
 
@@ -258,20 +282,29 @@ from fastapi.security import APIKeyHeader
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
-async def verify_api_key(api_key: Optional[str] = Depends(api_key_header)) -> bool:
+async def verify_api_key(
+    api_key: Optional[str] = Depends(api_key_header),
+    token: Optional[str] = Depends(oauth2_scheme),
+) -> bool:
     """
-    Verify API key for backward compatibility.
-    Returns True if valid API key or if no API key authentication is required.
+    Verify API key or JWT token for authentication.
+    At least one valid credential is required.
     """
-    if not api_key:
-        return True  # Allow requests without API key (JWT will be checked)
-    
-    if api_key == settings.api_key:
+    # Accept valid API key
+    if api_key and api_key == settings.api_key:
         return True
     
+    # Accept valid JWT token
+    if token:
+        token_data = decode_token(token)
+        if token_data and token_data.user_id:
+            return True
+    
+    # Neither valid API key nor valid JWT
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid API key"
+        detail="Valid API key or Bearer token required",
+        headers={"WWW-Authenticate": "Bearer"},
     )
 
 

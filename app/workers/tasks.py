@@ -11,10 +11,14 @@ from celery.exceptions import MaxRetriesExceededError
 
 from app.workers.celery_app import celery_app
 from app.database import SessionLocal
-from app.models import Job, JobStatus
+from app.models import Job, JobStatus, UploadedFile, Template
 from app.services.generators import GeneratorFactory
 from app.services.file_service import FileService
+from app.services.sdv_service import SDVService
 from app.config import settings
+
+from pathlib import Path
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -81,14 +85,24 @@ def generate_data_task(
         
         # Update job status to processing
         job.status = JobStatus.PROCESSING
-        from datetime import datetime
-        job.started_at = datetime.utcnow()
+        from datetime import datetime, timezone
+        job.started_at = datetime.now(timezone.utc)
         db.commit()
         
         logger.info(f"Job {job_id}: Generating {record_count} {data_type} records")
         
         # Create generator
-        generator = GeneratorFactory.get_generator(data_type)
+        template_schema = None
+        if data_type == "custom" and job.template_id:
+            template = db.query(Template).filter(Template.id == job.template_id).first()
+            if not template:
+                raise ValueError(f"Template {job.template_id} not found for custom data type.")
+            template_schema = template.schema
+
+        generator = GeneratorFactory.get_generator(
+            data_type,
+            template_schema=template_schema,
+        )
         
         # Generate filename
         filename = file_service.generate_filename(
@@ -131,7 +145,7 @@ def generate_data_task(
         job.progress = 100.0
         job.file_path = filename  # Store relative filename
         job.file_size = result["file_size"]
-        job.completed_at = datetime.utcnow()
+        job.completed_at = datetime.now(timezone.utc)
         job.job_metadata = {
             **(job.job_metadata or {}),
             "generation_time_seconds": result["generation_time_seconds"],
@@ -163,8 +177,8 @@ def generate_data_task(
                 job.status = JobStatus.FAILED
                 job.error_message = str(e)
                 job.retry_count = self.request.retries
-                from datetime import datetime
-                job.completed_at = datetime.utcnow()
+                from datetime import datetime, timezone
+                job.completed_at = datetime.now(timezone.utc)
                 db.commit()
         except Exception as db_error:
             logger.error(f"Failed to update job status: {db_error}")
@@ -226,12 +240,73 @@ def cancel_job_task(job_id: str):
             return {"status": "error", "message": f"Job already {job.status.value}"}
         
         job.status = JobStatus.CANCELLED
-        from datetime import datetime
-        job.completed_at = datetime.utcnow()
+        from datetime import datetime, timezone
+        job.completed_at = datetime.now(timezone.utc)
         db.commit()
         
         logger.info(f"Job {job_id} cancelled successfully")
         return {"status": "cancelled", "job_id": job_id}
         
+    finally:
+        db.close()
+
+
+@celery_app.task(
+    name="app.workers.tasks.fit_sdv_model_task",
+    bind=True,
+    max_retries=3,
+    default_retry_delay=60,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_jitter=True,
+)
+def fit_sdv_model_task(self, upload_id: str):
+    """
+    Celery task to fit an SDV GaussianCopulaSynthesizer model for an uploaded dataset.
+    """
+    logger.info("Starting SDV fitting task for upload %s", upload_id)
+
+    db = get_db_session()
+    try:
+        upload = db.query(UploadedFile).filter(UploadedFile.id == UUID(upload_id)).first()
+        if not upload:
+            logger.error("UploadedFile %s not found in database", upload_id)
+            return {"status": "error", "message": "Upload not found"}
+
+        storage_path = Path(settings.storage_path)
+        full_path = storage_path / upload.file_path
+
+        if not full_path.exists():
+            logger.error("Uploaded file for %s not found at %s", upload_id, full_path)
+            return {"status": "error", "message": "Uploaded file not found"}
+
+        ext = full_path.suffix.lower()
+        try:
+            if ext == ".csv":
+                df = pd.read_csv(full_path)
+            else:
+                # JSON: try newline-delimited first, then standard JSON
+                try:
+                    df = pd.read_json(full_path, lines=True)
+                except ValueError:
+                    df = pd.read_json(full_path)
+        except Exception as exc:
+            logger.exception("Failed to load dataframe for upload %s: %s", upload_id, exc)
+            return {"status": "error", "message": f"Failed to load dataframe: {exc}"}
+
+        sdv_service = SDVService()
+        model_path = sdv_service.fit_and_save_model(upload_id, df)
+
+        upload.model_path = model_path
+        db.commit()
+
+        logger.info("Completed SDV fitting for upload %s, model at %s", upload_id, model_path)
+        return {"status": "completed", "upload_id": upload_id, "model_path": model_path}
+
+    except Exception as exc:
+        logger.exception("SDV fitting failed for upload %s: %s", upload_id, exc)
+        if self.request.retries < self.max_retries:
+            raise self.retry(exc=exc)
+        return {"status": "failed", "upload_id": upload_id, "error": str(exc)}
     finally:
         db.close()

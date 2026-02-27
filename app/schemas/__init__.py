@@ -7,7 +7,10 @@ from app.schemas.schemas import (
     TemplateCreate, TemplateResponse, TemplateListResponse,
     GenerateRequest, GenerateResponse, PreviewRequest,
     ErrorResponse, SuccessResponse,
-    DataTypeInfo, DataTypeFieldInfo, DataTypeListResponse, TemplateField
+    DataTypeInfo, DataTypeFieldInfo, DataTypeListResponse, TemplateField,
+    SchemaFromDescriptionRequest, AISchemaField, AISchemaResponse,
+    UploadResponse, UploadSchemaPreview, GenerateFromUploadRequest,
+    GenerateFromUploadResponse, UploadListResponse, UploadedFileInfo,
 )
 
 __all__ = [
@@ -15,5 +18,8 @@ __all__ = [
     "TemplateCreate", "TemplateResponse", "TemplateListResponse",
     "GenerateRequest", "GenerateResponse", "PreviewRequest",
     "ErrorResponse", "SuccessResponse",
-    "DataTypeInfo", "DataTypeFieldInfo", "DataTypeListResponse", "TemplateField"
+    "DataTypeInfo", "DataTypeFieldInfo", "DataTypeListResponse", "TemplateField",
+    "SchemaFromDescriptionRequest", "AISchemaField", "AISchemaResponse",
+    "UploadResponse", "UploadSchemaPreview", "GenerateFromUploadRequest",
+    "GenerateFromUploadResponse", "UploadListResponse", "UploadedFileInfo",
 ]

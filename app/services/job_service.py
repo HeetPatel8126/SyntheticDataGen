@@ -4,7 +4,7 @@ Business logic for job management
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
 from uuid import UUID
 from sqlalchemy.orm import Session
@@ -51,7 +51,7 @@ class JobService:
             status=JobStatus.PENDING,
             progress=0.0,
             job_metadata={
-                "requested_at": datetime.utcnow().isoformat()
+                "requested_at": datetime.now(timezone.utc).isoformat()
             }
         )
         
@@ -121,10 +121,10 @@ class JobService:
             job.error_message = error_message
         
         if status == JobStatus.PROCESSING and job.started_at is None:
-            job.started_at = datetime.utcnow()
+            job.started_at = datetime.now(timezone.utc)
         
         if status in [JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED]:
-            job.completed_at = datetime.utcnow()
+            job.completed_at = datetime.now(timezone.utc)
             if status == JobStatus.COMPLETED:
                 job.progress = 100.0
         
@@ -181,7 +181,7 @@ class JobService:
         job.progress = 100.0
         job.file_path = file_path
         job.file_size = file_size
-        job.completed_at = datetime.utcnow()
+        job.completed_at = datetime.now(timezone.utc)
         
         if metadata:
             job.job_metadata = {**(job.job_metadata or {}), **metadata}
@@ -215,7 +215,7 @@ class JobService:
         
         job.status = JobStatus.FAILED
         job.error_message = error_message
-        job.completed_at = datetime.utcnow()
+        job.completed_at = datetime.now(timezone.utc)
         
         if increment_retry:
             job.retry_count += 1

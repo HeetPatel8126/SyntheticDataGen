@@ -62,7 +62,7 @@ class TestAuthenticationRequired:
             },
             headers={"X-API-Key": "invalid-key"}
         )
-        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
     
     def test_generate_with_valid_api_key(self, client, api_headers):
         """Test generate endpoint accepts valid API key"""
