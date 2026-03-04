@@ -69,6 +69,20 @@ class Settings(BaseSettings):
     min_records: int = Field(default=100)
     max_records: int = Field(default=1000000)
     default_records: int = Field(default=1000)
+    supported_locales: List[str] = Field(
+        default=[
+            "en_US",
+            "en_GB",
+            "fr_FR",
+            "de_DE",
+            "es_ES",
+            "it_IT",
+            "ja_JP",
+            "ko_KR",
+            "zh_CN",
+            "hi_IN",
+        ]
+    )
     
     # Password Policy
     min_password_length: int = Field(default=8)
@@ -80,6 +94,13 @@ class Settings(BaseSettings):
     def parse_cors_origins(cls, v):
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",")]
+        return v
+
+    @field_validator("supported_locales", mode="before")
+    @classmethod
+    def parse_supported_locales(cls, v):
+        if isinstance(v, str):
+            return [locale.strip() for locale in v.split(",") if locale.strip()]
         return v
     
     class Config:

@@ -6,6 +6,8 @@ A full-stack application for generating realistic synthetic data for testing, de
 
 - **Multiple Data Types**: Generate User/Person, E-commerce transactions, and Company data
 - **Flexible Output**: Export as CSV or JSON formats
+- **Reproducible Data Runs**: Optional seed support for deterministic generation
+- **Locale-Aware Generation**: Generate culturally localized datasets (US, EU, Asia, India, and more)
 - **Async Processing**: Large datasets (up to 1M records) processed in background with Celery
 - **Progress Tracking**: Real-time job status and progress updates
 - **Custom Templates**: Create your own data schemas with custom fields
@@ -283,9 +285,13 @@ POST /api/generate
 {
   "data_type": "user",       // "user", "ecommerce", or "company"
   "record_count": 10000,     // 100 to 1,000,000
-  "output_format": "csv"     // "csv" or "json"
+  "output_format": "csv",    // "csv" or "json"
+  "locale": "en_US",         // optional, defaults to en_US
+  "seed": 2026                // optional, enables deterministic output
 }
 ```
+
+`locale` currently supports: `en_US`, `en_GB`, `fr_FR`, `de_DE`, `es_ES`, `it_IT`, `ja_JP`, `ko_KR`, `zh_CN`, `hi_IN`.
 
 **Response**:
 ```json
@@ -430,6 +436,7 @@ Environment variables (see `.env.example`):
 | `MAX_FILE_AGE_DAYS` | Days before auto-cleanup | `7` |
 | `MIN_RECORDS` | Minimum records per job | `100` |
 | `MAX_RECORDS` | Maximum records per job | `1000000` |
+| `SUPPORTED_LOCALES` | Comma-separated locale list accepted by API requests | `en_US,en_GB,fr_FR,de_DE,es_ES,it_IT,ja_JP,ko_KR,zh_CN,hi_IN` |
 
 ## 🔒 Security Notes
 

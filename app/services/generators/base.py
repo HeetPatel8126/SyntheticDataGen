@@ -31,10 +31,20 @@ class BaseGenerator(ABC):
             seed: Random seed for reproducibility
         """
         self.faker = Faker(locale)
-        if seed:
+        if seed is not None:
             Faker.seed(seed)
+            self.faker.seed_instance(seed)
+            random.seed(seed)
         self.locale = locale
         self.seed = seed
+
+    def _uuid4(self) -> str:
+        """Generate UUID string using Faker's seeded RNG for reproducibility."""
+        return self.faker.uuid4()
+
+    def _uuid4_hex(self) -> str:
+        """Generate UUID hex (no dashes) using Faker's seeded RNG."""
+        return self._uuid4().replace("-", "")
     
     @property
     @abstractmethod

@@ -3,7 +3,6 @@ Financial / Banking Data Generator
 Generates realistic financial transaction and account data
 """
 
-import uuid
 import string
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Any, Optional
@@ -161,7 +160,7 @@ class FinancialGenerator(BaseGenerator):
         settlement_date = (txn_date + timedelta(days=random.choice([1, 2, 3]))).date()
 
         return {
-            "transaction_id": f"TXN-{uuid.uuid4().hex[:12].upper()}",
+            "transaction_id": f"TXN-{self._uuid4_hex()[:12].upper()}",
             "account_id": f"ACCT-{random.randint(10000000, 99999999)}",
             "account_holder": account_holder,
             "account_type": account_type,
@@ -184,7 +183,7 @@ class FinancialGenerator(BaseGenerator):
             "ip_address": self.faker.ipv4() if random.random() < 0.6 else "",
             "location_city": self.faker.city(),
             "location_country": "United States" if not is_international else self.faker.country(),
-            "reference_number": f"REF-{txn_date.strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}",
+            "reference_number": f"REF-{txn_date.strftime('%Y%m%d')}-{self._uuid4_hex()[:6].upper()}",
             "transaction_date": txn_date,
             "settlement_date": settlement_date.isoformat(),
         }

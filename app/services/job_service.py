@@ -51,7 +51,9 @@ class JobService:
             status=JobStatus.PENDING,
             progress=0.0,
             job_metadata={
-                "requested_at": datetime.now(timezone.utc).isoformat()
+                "requested_at": datetime.now(timezone.utc).isoformat(),
+                "locale": request.locale,
+                "seed": request.seed,
             }
         )
         

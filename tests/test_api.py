@@ -171,6 +171,66 @@ class TestGenerateEndpoint:
         
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
+    def test_generate_with_locale_and_seed(self, client, api_headers):
+        """Test generation request supports locale and seed and persists metadata"""
+        response = client.post(
+            "/api/generate",
+            json={
+                "data_type": "user",
+                "record_count": 100,
+                "output_format": "csv",
+                "locale": "fr_FR",
+                "seed": 2026,
+            },
+            headers=api_headers,
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        job_id = response.json()["job_id"]
+
+        details_response = client.get(f"/api/jobs/{job_id}/details", headers=api_headers)
+        assert details_response.status_code == status.HTTP_200_OK
+
+        metadata = details_response.json().get("job_metadata") or {}
+        assert metadata.get("locale") == "fr_FR"
+        assert metadata.get("seed") == 2026
+
+    def test_generate_invalid_locale(self, client, api_headers):
+        """Test generation request rejects unsupported locale"""
+        response = client.post(
+            "/api/generate",
+            json={
+                "data_type": "user",
+                "record_count": 100,
+                "output_format": "csv",
+                "locale": "xx_YY",
+            },
+            headers=api_headers,
+        )
+
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+
+class TestPreviewEndpoint:
+    """Tests for data preview endpoint"""
+
+    def test_preview_reproducible_with_seed(self, client, api_headers):
+        """Test preview results are reproducible with same locale and seed"""
+        payload = {
+            "data_type": "user",
+            "record_count": 5,
+            "output_format": "json",
+            "locale": "en_US",
+            "seed": 1337,
+        }
+
+        response_1 = client.post("/api/preview", json=payload, headers=api_headers)
+        response_2 = client.post("/api/preview", json=payload, headers=api_headers)
+
+        assert response_1.status_code == status.HTTP_200_OK
+        assert response_2.status_code == status.HTTP_200_OK
+        assert response_1.json() == response_2.json()
+
 
 class TestJobStatusEndpoint:
     """Tests for job status endpoint"""

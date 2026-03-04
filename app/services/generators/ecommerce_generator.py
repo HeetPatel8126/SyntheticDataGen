@@ -3,7 +3,6 @@ E-commerce Transaction Data Generator
 Generates realistic e-commerce transaction data
 """
 
-import uuid
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 import random
@@ -221,9 +220,9 @@ class EcommerceGenerator(BaseGenerator):
         product = random.choice(PRODUCT_CATALOG)
         
         # Generate order and customer IDs
-        order_id = f"ORD-{uuid.uuid4().hex[:12].upper()}"
-        transaction_id = f"TXN-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
-        customer_id = str(uuid.uuid4())
+        order_id = f"ORD-{self._uuid4_hex()[:12].upper()}"
+        transaction_id = f"TXN-{datetime.now().strftime('%Y%m%d')}-{self._uuid4_hex()[:6].upper()}"
+        customer_id = self._uuid4()
         product_id = f"{product['sku_prefix']}-{random.randint(100000, 999999)}"
         
         # Generate quantity (weighted towards lower quantities)

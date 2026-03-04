@@ -9,7 +9,6 @@ constraints.
 
 import logging
 import random
-import uuid
 from datetime import datetime, date, timedelta
 from typing import Any, Callable, Dict, List, Optional
 
@@ -132,7 +131,7 @@ class CustomTemplateGenerator(BaseGenerator):
         if field_type == "company":
             return self.faker.company()
         if field_type == "uuid":
-            return str(uuid.uuid4())
+            return self._uuid4()
 
         if field_type in {"integer", "float", "percentage", "price", "distribution"}:
             return self._generate_numeric(field_type, options)

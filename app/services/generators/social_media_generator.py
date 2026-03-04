@@ -3,7 +3,6 @@ Social Media Data Generator
 Generates realistic social media posts, profiles, and engagement data
 """
 
-import uuid
 import string
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Any, Optional
@@ -214,10 +213,10 @@ class SocialMediaGenerator(BaseGenerator):
 
         # Media URL
         media_ext = random.choice(["jpg", "png", "mp4", "webp"])
-        media_url = f"https://cdn.example.com/media/{uuid.uuid4().hex[:12]}.{media_ext}" if post_type != "Text" else ""
+        media_url = f"https://cdn.example.com/media/{self._uuid4_hex()[:12]}.{media_ext}" if post_type != "Text" else ""
 
         return {
-            "post_id": f"POST-{uuid.uuid4().hex[:8].upper()}",
+            "post_id": f"POST-{self._uuid4_hex()[:8].upper()}",
             "username": username,
             "display_name": display_name,
             "bio": random.choice(SAMPLE_BIOS),

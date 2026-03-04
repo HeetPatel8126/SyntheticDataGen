@@ -3,7 +3,6 @@ Company/Business Data Generator
 Generates realistic company and business data
 """
 
-import uuid
 from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional
 import random
@@ -312,7 +311,7 @@ class CompanyGenerator(BaseGenerator):
         description = f"Leading {sub_industry.lower()} company specializing in {self.faker.bs()}."
         
         return {
-            "id": str(uuid.uuid4()),
+            "id": self._uuid4(),
             "company_name": company_name,
             "trading_name": trading_name,
             "industry": industry,

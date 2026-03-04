@@ -114,6 +114,8 @@ class GenerateRequest(BaseModel):
     )
     output_format: OutputFormat = Field(default=OutputFormat.CSV, description="Output file format")
     template_id: Optional[UUID] = Field(default=None, description="Custom template ID (for custom data type)")
+    locale: str = Field(default="en_US", description="Locale used by Faker data generation")
+    seed: Optional[int] = Field(default=None, ge=0, le=2_147_483_647, description="Optional seed for reproducible generation")
     
     @field_validator('record_count')
     @classmethod
@@ -122,6 +124,13 @@ class GenerateRequest(BaseModel):
             raise ValueError(f"record_count must be at least {settings.min_records}")
         if v > settings.max_records:
             raise ValueError(f"record_count must not exceed {settings.max_records}")
+        return v
+
+    @field_validator('locale')
+    @classmethod
+    def validate_locale(cls, v):
+        if v not in settings.supported_locales:
+            raise ValueError(f"Unsupported locale '{v}'. Supported locales: {settings.supported_locales}")
         return v
     
     class Config:
@@ -144,6 +153,15 @@ class PreviewRequest(BaseModel):
         description="Number of records to preview (1-100)"
     )
     output_format: OutputFormat = Field(default=OutputFormat.JSON, description="Output format")
+    locale: str = Field(default="en_US", description="Locale used by Faker data generation")
+    seed: Optional[int] = Field(default=None, ge=0, le=2_147_483_647, description="Optional seed for reproducible preview")
+
+    @field_validator('locale')
+    @classmethod
+    def validate_locale(cls, v):
+        if v not in settings.supported_locales:
+            raise ValueError(f"Unsupported locale '{v}'. Supported locales: {settings.supported_locales}")
+        return v
     
     class Config:
         json_schema_extra = {

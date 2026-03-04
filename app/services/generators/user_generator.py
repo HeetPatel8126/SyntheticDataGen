@@ -3,7 +3,6 @@ User/Person Data Generator
 Generates realistic user profile data
 """
 
-import uuid
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 import random
@@ -192,7 +191,7 @@ class UserGenerator(BaseGenerator):
         )
         
         return {
-            "id": str(uuid.uuid4()),
+            "id": self._uuid4(),
             "first_name": first_name,
             "last_name": last_name,
             "full_name": full_name,

@@ -48,9 +48,13 @@ def setup_test_database():
     yield
     # Drop all tables after tests
     Base.metadata.drop_all(bind=test_engine)
+    test_engine.dispose()
     # Remove test database file
     if os.path.exists("./test.db"):
-        os.remove("./test.db")
+        try:
+            os.remove("./test.db")
+        except PermissionError:
+            pass
 
 
 @pytest.fixture(scope="function")

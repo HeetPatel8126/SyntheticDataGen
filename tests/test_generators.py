@@ -303,6 +303,20 @@ class TestGeneratorWithSeed:
         generator2 = UserGenerator(seed=seed)
         record2 = generator2.generate_record()
         
-        # Same seed should produce same first_name at least
-        # Note: Due to Faker internals, exact reproducibility may vary
         assert generator1.seed == generator2.seed
+        assert record1 == record2
+
+    def test_different_seed_changes_output(self):
+        """Test different seeds produce different records"""
+        generator1 = UserGenerator(seed=1)
+        generator2 = UserGenerator(seed=2)
+
+        record1 = generator1.generate_record()
+        record2 = generator2.generate_record()
+
+        assert record1 != record2
+
+    def test_generator_locale_assignment(self):
+        """Test generator stores provided locale"""
+        generator = UserGenerator(locale="fr_FR", seed=42)
+        assert generator.locale == "fr_FR"

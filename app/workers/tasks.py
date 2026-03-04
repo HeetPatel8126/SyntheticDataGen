@@ -58,7 +58,9 @@ def generate_data_task(
     data_type: str,
     record_count: int,
     output_format: str,
-    template_id: Optional[str] = None
+    template_id: Optional[str] = None,
+    locale: str = "en_US",
+    seed: Optional[int] = None,
 ):
     """
     Celery task for generating synthetic data.
@@ -101,6 +103,8 @@ def generate_data_task(
 
         generator = GeneratorFactory.get_generator(
             data_type,
+            locale=locale,
+            seed=seed,
             template_schema=template_schema,
         )
         
@@ -149,7 +153,9 @@ def generate_data_task(
         job.job_metadata = {
             **(job.job_metadata or {}),
             "generation_time_seconds": result["generation_time_seconds"],
-            "generated_at": result["generated_at"]
+            "generated_at": result["generated_at"],
+            "locale": locale,
+            "seed": seed,
         }
         db.commit()
         

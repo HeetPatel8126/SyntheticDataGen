@@ -82,7 +82,11 @@ async def preview_data(
     
     try:
         # Create generator and generate preview records (max 10)
-        generator = GeneratorFactory.get_generator(request.data_type.value)
+        generator = GeneratorFactory.get_generator(
+            request.data_type.value,
+            locale=request.locale,
+            seed=request.seed,
+        )
         preview_count = min(request.record_count, 10)  # Limit to 10 for preview
         records = generator.generate_batch(preview_count)
         
@@ -140,7 +144,9 @@ async def create_generation_job(
         data_type=request.data_type.value,
         record_count=request.record_count,
         output_format=request.output_format.value,
-        template_id=str(request.template_id) if request.template_id else None
+        template_id=str(request.template_id) if request.template_id else None,
+        locale=request.locale,
+        seed=request.seed,
     )
     
     logger.info(f"Created generation job {job.id} for {request.record_count} {request.data_type.value} records")
