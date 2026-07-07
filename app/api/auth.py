@@ -4,8 +4,10 @@ Secure JWT-based authentication for user management
 """
 
 import re
+import uuid as _uuid
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from threading import Lock
+from typing import Optional, Set
 from uuid import UUID
 
 from fastapi import HTTPException, Depends, status
@@ -26,6 +28,24 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds
 def _truncate_password(password: str) -> str:
     """Truncate password to 72 bytes for bcrypt compatibility"""
     return password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
+
+# ---------------------------------------------------------------------------
+# Token blacklist (in-memory; swap to Redis for multi-process deployments)
+# ---------------------------------------------------------------------------
+_blacklisted_jtis: Set[str] = set()
+_blacklist_lock = Lock()
+
+
+def blacklist_token(jti: str) -> None:
+    """Add a token's JTI to the blacklist so it is rejected on future use."""
+    with _blacklist_lock:
+        _blacklisted_jtis.add(jti)
+
+
+def _is_blacklisted(jti: str) -> bool:
+    with _blacklist_lock:
+        return jti in _blacklisted_jtis
+
 
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
@@ -123,30 +143,56 @@ def get_password_hash(password: str) -> str:
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """Create JWT access token"""
+    """Create JWT access token with a unique JTI for revocation support."""
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=settings.access_token_expire_minutes))
-    to_encode.update({"exp": expire, "type": "access"})
+    to_encode.update({"exp": expire, "type": "access", "jti": str(_uuid.uuid4())})
     return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
 
 def create_refresh_token(data: dict) -> str:
-    """Create JWT refresh token"""
+    """Create JWT refresh token with a unique JTI for revocation support."""
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(days=settings.refresh_token_expire_days)
-    to_encode.update({"exp": expire, "type": "refresh"})
+    to_encode.update({"exp": expire, "type": "refresh", "jti": str(_uuid.uuid4())})
     return jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
 
-def decode_token(token: str) -> Optional[TokenData]:
-    """Decode and validate JWT token"""
+def decode_token(token: str, expected_type: str = "access") -> Optional[TokenData]:
+    """
+    Decode and validate JWT token.
+
+    Args:
+        token: The raw JWT string.
+        expected_type: Must be ``"access"`` or ``"refresh"``.
+            Tokens whose ``type`` claim does not match are rejected.
+    """
     try:
         payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+
+        # --- Type enforcement (Issue #4) ---
+        token_type = payload.get("type")
+        if token_type != expected_type:
+            return None
+
+        # --- Blacklist check (Issue #5) ---
+        jti = payload.get("jti")
+        if jti and _is_blacklisted(jti):
+            return None
+
         user_id: str = payload.get("sub")
         email: str = payload.get("email")
         if user_id is None:
             return None
         return TokenData(user_id=user_id, email=email)
+    except JWTError:
+        return None
+
+
+def decode_token_raw(token: str) -> Optional[dict]:
+    """Decode a JWT and return the raw payload dict (for blacklisting on logout)."""
+    try:
+        return jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
     except JWTError:
         return None
 

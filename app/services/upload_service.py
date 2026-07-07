@@ -60,7 +60,14 @@ class UploadService:
         Returns a storage-relative path (e.g. 'uploads/<timestamp>_<name>.ext').
         """
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-        safe_name = os.path.basename(upload_file.filename)
+        # Sanitize filename: strip path components, null bytes, and unsafe chars (Issue #10)
+        raw_name = os.path.basename(upload_file.filename or "upload")
+        raw_name = raw_name.replace("\x00", "")  # strip null bytes
+        import re as _re
+        safe_name = _re.sub(r"[^\w.\-]", "_", raw_name)  # only alnum, dot, hyphen, underscore
+        safe_name = safe_name[:200]  # limit length
+        if not safe_name:
+            safe_name = "upload"
         filename = f"{timestamp}_{safe_name}"
         relative_path = os.path.join("uploads", filename)
         full_path = self.base_path / relative_path

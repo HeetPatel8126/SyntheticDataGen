@@ -39,6 +39,25 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def _enforce_upload_ownership(
+    requester_user_id: Optional[str],
+    resource_user_id,
+    resource_id,
+) -> None:
+    """Strict ownership check for uploads — mirrors routes._enforce_ownership."""
+    owner_str = str(resource_user_id) if resource_user_id else None
+    if owner_str and not requester_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Upload with ID {resource_id} not found",
+        )
+    if owner_str and requester_user_id and owner_str != requester_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Upload with ID {resource_id} not found",
+        )
+
+
 def _load_dataframe_from_uploaded(upload: UploadedFile) -> pd.DataFrame:
     """Load the original dataframe for an UploadedFile from disk."""
     storage_path = Path(settings.storage_path)
@@ -129,11 +148,7 @@ async def generate_from_upload(
             detail=f"Upload with ID {request.upload_id} not found",
         )
 
-    if user_id and upload.user_id and str(upload.user_id) != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Upload with ID {request.upload_id} not found",
-        )
+    _enforce_upload_ownership(user_id, upload.user_id, request.upload_id)
 
     if not upload.model_path:
         raise HTTPException(
@@ -171,6 +186,9 @@ async def list_uploads(
     query = db.query(UploadedFile)
     if user_id:
         query = query.filter(UploadedFile.user_id == user_id)
+    else:
+        # API-key-only auth (no JWT) should not see other users' uploads
+        query = query.filter(UploadedFile.user_id.is_(None))
 
     uploads = query.order_by(UploadedFile.created_at.desc()).all()
 

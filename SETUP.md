@@ -266,7 +266,7 @@ NEXT_PUBLIC_MAX_RECORDS=1000000
 
 ### Backend `.env`:
 ```env
-DATABASE_URL=postgresql://user:password@localhost/synthdata
+DATABASE_URL=postgresql://postgres:YOUR_SUPABASE_PASSWORD@db.YOUR_PROJECT_REF.supabase.co:5432/postgres?sslmode=require
 REDIS_URL=redis://localhost:6379
 SECRET_KEY=your-secret-key
 ```

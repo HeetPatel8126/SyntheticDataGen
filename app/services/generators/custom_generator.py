@@ -159,8 +159,18 @@ class CustomTemplateGenerator(BaseGenerator):
             pattern = options.get("pattern") or field_def.get("regex_pattern")
             if not pattern:
                 return None
+            # Reject excessively long patterns to mitigate ReDoS (Issue #11)
+            if len(pattern) > 200:
+                logger.warning("Regex pattern too long (%d chars), skipping", len(pattern))
+                return None
             try:
-                return rstr.xeger(pattern)
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                    future = pool.submit(rstr.xeger, pattern)
+                    return future.result(timeout=2)  # 2-second hard limit
+            except concurrent.futures.TimeoutError:
+                logger.warning("Regex generation timed out for pattern: %s", pattern[:50])
+                return None
             except Exception:
                 return None
 

@@ -5,6 +5,7 @@ Main FastAPI Application Entry Point
 
 import logging
 import sys
+import uuid as _uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
@@ -131,13 +132,15 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
-    """Custom handler for unhandled exceptions"""
-    logger.exception(f"Unhandled exception: {exc}")
+    """Custom handler for unhandled exceptions — never leak raw details (Issue #13)"""
+    error_id = str(_uuid.uuid4())[:8]
+    logger.exception("Unhandled exception [error_id=%s]: %s", error_id, exc)
     return JSONResponse(
         status_code=500,
         content={
             "error": "Internal server error",
-            "detail": str(exc) if settings.debug else "An unexpected error occurred",
+            "error_id": error_id,
+            "detail": f"An unexpected error occurred. Reference: {error_id}",
             "path": str(request.url.path)
         }
     )
@@ -158,6 +161,18 @@ async def log_requests(request: Request, call_next):
         f"Time: {process_time:.2f}ms"
     )
     
+    return response
+
+
+# Security headers middleware
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Add security headers to all responses."""
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
     return response
 
 
@@ -280,3 +295,4 @@ if __name__ == "__main__":
         reload=settings.debug,
         log_level="debug" if settings.debug else "info"
     )
+

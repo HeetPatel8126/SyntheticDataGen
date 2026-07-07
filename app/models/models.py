@@ -7,9 +7,8 @@ import uuid
 from datetime import datetime, timezone
 from sqlalchemy import (
     Column, String, Integer, Float, DateTime, 
-    Text, JSON, Enum, Boolean, ForeignKey
+    Text, JSON, Enum, Boolean, ForeignKey, Uuid
 )
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -48,7 +47,7 @@ class User(Base):
     """
     __tablename__ = "users"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(Uuid, primary_key=True, default=uuid.uuid4)
     email = Column(String(255), unique=True, nullable=False, index=True)
     hashed_password = Column(String(255), nullable=False)
     full_name = Column(String(255), nullable=True)
@@ -95,14 +94,14 @@ class Job(Base):
     """
     __tablename__ = "jobs"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True, index=True)
+    id = Column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id = Column(Uuid, ForeignKey("users.id"), nullable=True, index=True)
     
     # Job configuration
     data_type = Column(Enum(DataType, values_callable=lambda x: [e.value for e in x]), nullable=False)
     record_count = Column(Integer, nullable=False)
     output_format = Column(Enum(OutputFormat, values_callable=lambda x: [e.value for e in x]), default=OutputFormat.CSV)
-    template_id = Column(UUID(as_uuid=True), ForeignKey("templates.id"), nullable=True)
+    template_id = Column(Uuid, ForeignKey("templates.id"), nullable=True)
     
     # Job status
     status = Column(Enum(JobStatus, values_callable=lambda x: [e.value for e in x]), default=JobStatus.PENDING, index=True)
@@ -158,7 +157,7 @@ class Template(Base):
     """
     __tablename__ = "templates"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(Uuid, primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False, index=True)
     description = Column(Text, nullable=True)
     
@@ -171,7 +170,7 @@ class Template(Base):
     is_system = Column(Boolean, default=False)  # System templates can't be deleted
     
     # Metadata
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    user_id = Column(Uuid, ForeignKey("users.id"), nullable=True)
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
@@ -206,8 +205,8 @@ class UploadedFile(Base):
     """
     __tablename__ = "uploaded_files"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True, index=True)
+    id = Column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id = Column(Uuid, ForeignKey("users.id"), nullable=True, index=True)
     
     filename = Column(String(255), nullable=False)
     file_path = Column(String(500), nullable=False)

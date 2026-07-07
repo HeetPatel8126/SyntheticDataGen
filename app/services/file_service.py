@@ -47,8 +47,18 @@ class FileService:
             
         Returns:
             Full path to the file
+            
+        Raises:
+            ValueError: If the resulting path escapes the storage directory
         """
-        return self.storage_path / filename
+        resolved = (self.storage_path / filename).resolve()
+        storage_resolved = self.storage_path.resolve()
+        # Ensure the resolved path is within the storage directory (Issue #9)
+        if not str(resolved).startswith(str(storage_resolved)):
+            raise ValueError(
+                f"Path traversal detected: '{filename}' resolves outside storage directory"
+            )
+        return resolved
     
     def generate_filename(
         self,

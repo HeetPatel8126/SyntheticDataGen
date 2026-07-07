@@ -4,7 +4,6 @@ Wrapper around SDV GaussianCopulaSynthesizer for single-table modeling.
 """
 
 import logging
-import pickle
 from pathlib import Path
 from typing import Optional
 
@@ -28,7 +27,7 @@ class SDVService:
         self.model_dir.mkdir(parents=True, exist_ok=True)
 
     def _get_model_path(self, upload_id: str) -> Path:
-        return self.model_dir / f"{upload_id}.pkl"
+        return self.model_dir / f"{upload_id}.sdv"
 
     def fit_and_save_model(self, upload_id: str, df: pd.DataFrame) -> str:
         """
@@ -44,15 +43,15 @@ class SDVService:
         synthesizer.fit(df)
 
         model_path = self._get_model_path(upload_id)
-        with open(model_path, "wb") as f:
-            pickle.dump(synthesizer, f)
+        # Use SDV's built-in save — avoids insecure pickle.dump (Issue #8)
+        synthesizer.save(str(model_path))
 
         logger.info("Saved SDV model for upload %s to %s", upload_id, model_path)
         return str(model_path)
 
     def _load_model(self, model_path: str) -> GaussianCopulaSynthesizer:
-        with open(model_path, "rb") as f:
-            return pickle.load(f)
+        # Use SDV's built-in load — avoids insecure pickle.load (Issue #8)
+        return GaussianCopulaSynthesizer.load(model_path)
 
     def sample(
         self,

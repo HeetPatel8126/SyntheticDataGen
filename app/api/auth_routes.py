@@ -3,9 +3,16 @@ Authentication Routes
 Endpoints for user registration, login, and token management
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+import logging
+import time
+from collections import defaultdict
+from threading import Lock
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
+from typing import Optional
 
 from app.database import get_db
 from app.api.auth import (
@@ -21,17 +28,58 @@ from app.api.auth import (
     create_access_token,
     create_refresh_token,
     decode_token,
+    decode_token_raw,
+    blacklist_token,
     get_user_by_id,
     get_current_user,
     user_to_response,
     verify_password,
     get_password_hash,
     validate_password_strength,
+    oauth2_scheme,
 )
-from pydantic import BaseModel
-from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+# ---------------------------------------------------------------------------
+# Brute-force login protection  (Issue #6)
+# ---------------------------------------------------------------------------
+_MAX_LOGIN_ATTEMPTS = 5
+_LOCKOUT_SECONDS = 15 * 60  # 15 minutes
+
+_login_attempts: dict[str, list[float]] = defaultdict(list)
+_login_lock = Lock()
+
+
+def _check_login_rate(email: str) -> None:
+    """Raise 429 if the email has exceeded the login attempt limit."""
+    email_lower = email.lower()
+    now = time.monotonic()
+    with _login_lock:
+        # Purge old entries
+        _login_attempts[email_lower] = [
+            ts for ts in _login_attempts[email_lower]
+            if now - ts < _LOCKOUT_SECONDS
+        ]
+        if len(_login_attempts[email_lower]) >= _MAX_LOGIN_ATTEMPTS:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Too many login attempts. Please try again later.",
+            )
+
+
+def _record_failed_login(email: str) -> None:
+    email_lower = email.lower()
+    with _login_lock:
+        _login_attempts[email_lower].append(time.monotonic())
+
+
+def _clear_login_attempts(email: str) -> None:
+    email_lower = email.lower()
+    with _login_lock:
+        _login_attempts.pop(email_lower, None)
 
 
 @router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
@@ -77,8 +125,11 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
     
     Returns access and refresh tokens.
     """
+    _check_login_rate(user_data.email)
+
     user = authenticate_user(db, user_data.email, user_data.password)
     if not user:
+        _record_failed_login(user_data.email)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -91,6 +142,7 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
             detail="User account is deactivated"
         )
     
+    _clear_login_attempts(user_data.email)
     update_last_login(db, user)
     
     # Generate tokens
@@ -114,8 +166,11 @@ async def login_form(
     OAuth2 compatible login endpoint (for Swagger UI).
     Uses username field as email.
     """
+    _check_login_rate(form_data.username)
+
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
+        _record_failed_login(form_data.username)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -128,6 +183,7 @@ async def login_form(
             detail="User account is deactivated"
         )
     
+    _clear_login_attempts(form_data.username)
     update_last_login(db, user)
     
     # Generate tokens
@@ -149,7 +205,7 @@ async def refresh_token(request: RefreshTokenRequest, db: Session = Depends(get_
     
     Returns new access and refresh tokens.
     """
-    token_data = decode_token(request.refresh_token)
+    token_data = decode_token(request.refresh_token, expected_type="refresh")
     if not token_data or not token_data.user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -195,7 +251,7 @@ async def get_current_user_info(current_user = Depends(get_current_user)):
 
 class UpdateProfileRequest(BaseModel):
     full_name: Optional[str] = None
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
 
 
 class ChangePasswordRequest(BaseModel):
@@ -250,11 +306,17 @@ async def change_password(
 
 
 @router.post("/logout")
-async def logout(current_user = Depends(get_current_user)):
+async def logout(
+    current_user=Depends(get_current_user),
+    token: Optional[str] = Depends(oauth2_scheme),
+):
     """
     Logout current user.
-    
-    Note: With JWT, logout is handled client-side by removing tokens.
-    This endpoint is for logging purposes and future token blacklisting.
+
+    Blacklists the current access token's JTI so it cannot be reused.
     """
+    if token:
+        payload = decode_token_raw(token)
+        if payload and payload.get("jti"):
+            blacklist_token(payload["jti"])
     return {"message": "Successfully logged out"}

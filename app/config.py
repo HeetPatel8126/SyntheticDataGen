@@ -39,7 +39,9 @@ class Settings(BaseSettings):
     cors_origins: List[str] = Field(default=["http://localhost:3000", "http://localhost:3001"])
     
     # Database Configuration
-    database_url: str = Field(default="sqlite:///./synthetic_data.db")
+    database_url: str = Field(
+        default="postgresql://postgres:YOUR_SUPABASE_PASSWORD@db.YOUR_PROJECT_REF.supabase.co:5432/postgres?sslmode=require"
+    )
     database_echo: bool = Field(default=False)
     
     # Redis Configuration
@@ -81,17 +83,38 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",")]
         return v
+
+    def validate_production_secrets(self) -> None:
+        """Raise if critical secrets are placeholder values in production."""
+        if self.app_env.lower() != "production":
+            return
+
+        _PLACEHOLDER_FRAGMENTS = {"change-in-production", "changeme", "dev-", "YOUR_"}
+        checks = {
+            "SECRET_KEY": self.secret_key,
+            "JWT_SECRET_KEY": self.jwt_secret_key,
+            "API_KEY": self.api_key,
+        }
+        for name, value in checks.items():
+            if any(frag in value for frag in _PLACEHOLDER_FRAGMENTS):
+                raise ValueError(
+                    f"CRITICAL: {name} contains a placeholder value. "
+                    f"Set a strong, unique secret in your environment before running in production."
+                )
     
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
+        extra = "ignore"
 
 
 @lru_cache()
 def get_settings() -> Settings:
     """Get cached settings instance"""
-    return Settings()
+    _settings = Settings()
+    _settings.validate_production_secrets()
+    return _settings
 
 
 settings = get_settings()

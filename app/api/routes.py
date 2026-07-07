@@ -51,6 +51,35 @@ file_service = FileService()
 ai_schema_service = AISchemaService()
 
 
+def _enforce_ownership(
+    requester_user_id: Optional[str],
+    resource_user_id,
+    resource_name: str,
+    resource_id,
+) -> None:
+    """
+    Strict ownership check that prevents IDOR attacks.
+
+    Rules:
+    - If the resource has an owner and the requester is anonymous
+      (API-key auth, no JWT) → DENY.
+    - If both are set and don't match → DENY.
+    - If the resource has no owner → allow (legacy anonymous jobs).
+    """
+    owner_str = str(resource_user_id) if resource_user_id else None
+    if owner_str and not requester_user_id:
+        # API-key-only user trying to access an owned resource
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail=f"{resource_name} with ID {resource_id} not found",
+        )
+    if owner_str and requester_user_id and owner_str != requester_user_id:
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail=f"{resource_name} with ID {resource_id} not found",
+        )
+
+
 # ============== Data Generation Endpoints ==============
 
 @router.post(
@@ -190,11 +219,7 @@ async def get_job_status(
         )
     
     # Enforce ownership
-    if user_id and job.user_id and str(job.user_id) != user_id:
-        raise HTTPException(
-            status_code=HTTP_404_NOT_FOUND,
-            detail=f"Job with ID {job_id} not found"
-        )
+    _enforce_ownership(user_id, job.user_id, "Job", job_id)
     
     return JobStatusResponse(
         id=job.id,
@@ -234,11 +259,7 @@ async def get_job_details(
         )
     
     # Enforce ownership
-    if user_id and job.user_id and str(job.user_id) != user_id:
-        raise HTTPException(
-            status_code=HTTP_404_NOT_FOUND,
-            detail=f"Job with ID {job_id} not found"
-        )
+    _enforce_ownership(user_id, job.user_id, "Job", job_id)
     
     return JobResponse.model_validate(job)
 
@@ -274,11 +295,7 @@ async def download_job_file(
         )
     
     # Enforce ownership
-    if user_id and job.user_id and str(job.user_id) != user_id:
-        raise HTTPException(
-            status_code=HTTP_404_NOT_FOUND,
-            detail=f"Job with ID {job_id} not found"
-        )
+    _enforce_ownership(user_id, job.user_id, "Job", job_id)
     
     if job.status != JobStatus.COMPLETED:
         raise HTTPException(
@@ -403,11 +420,7 @@ async def delete_job(
         )
     
     # Enforce ownership
-    if user_id and job.user_id and str(job.user_id) != user_id:
-        raise HTTPException(
-            status_code=HTTP_404_NOT_FOUND,
-            detail=f"Job with ID {job_id} not found"
-        )
+    _enforce_ownership(user_id, job.user_id, "Job", job_id)
     
     # Delete associated file if exists
     if job.file_path:
@@ -570,7 +583,8 @@ async def get_template(
 async def delete_template(
     template_id: UUID,
     db: Session = Depends(get_db),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
+    user_id: str = Depends(get_current_user_id)
 ):
     """Delete a custom template. System templates cannot be deleted."""
     template = db.query(Template).filter(Template.id == template_id).first()
@@ -586,6 +600,9 @@ async def delete_template(
             status_code=HTTP_400_BAD_REQUEST,
             detail="System templates cannot be deleted"
         )
+    
+    # Enforce ownership — only the template creator can delete it
+    _enforce_ownership(user_id, template.user_id, "Template", template_id)
     
     db.delete(template)
     db.commit()
