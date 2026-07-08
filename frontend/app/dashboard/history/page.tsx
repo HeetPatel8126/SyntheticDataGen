@@ -42,7 +42,7 @@ import {
   TiltCard,
   SpotlightCard
 } from "@/components/animations"
-import { Link } from "next-view-transitions"
+import Link from "next/link"
 
 // Timeline Job Card Component
 function JobCard({ job, index, onDownload, onDelete, isDeleting, isDownloading }: { 
