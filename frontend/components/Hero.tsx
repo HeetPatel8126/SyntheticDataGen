@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'next-view-transitions';
 
 export default function Hero() {
   return (
@@ -38,10 +39,10 @@ export default function Hero() {
         {/* Right Navigation & Logos (4 cols) */}
         <div className="hidden md:flex col-span-4 flex-col justify-center pl-16">
           <nav className="flex flex-col gap-6 text-2xl font-medium tracking-tight mb-16">
-            <a href="#" className="text-white hover:text-gray-300 transition">AI Strategy</a>
-            <a href="#" className="text-white hover:text-gray-300 transition">Custom Agents</a>
-            <a href="#" className="text-white hover:text-gray-300 transition">Process Automation</a>
-            <a href="#" className="text-white hover:text-gray-300 transition">Data Intelligence</a>
+            <Link href="#" className="text-white hover:text-gray-300 transition">AI Strategy</Link>
+            <Link href="#" className="text-white hover:text-gray-300 transition">Custom Agents</Link>
+            <Link href="#" className="text-white hover:text-gray-300 transition">Process Automation</Link>
+            <Link href="#" className="text-white hover:text-gray-300 transition">Data Intelligence</Link>
           </nav>
 
           <div className="flex gap-8 opacity-60 grayscale items-center">

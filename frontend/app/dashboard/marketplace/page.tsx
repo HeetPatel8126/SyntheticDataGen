@@ -41,7 +41,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import { FadeInWhenVisible } from "@/components/animations"
-import Link from "next/link"
+import { Link } from "next-view-transitions"
 
 // ─── MOCK MARKETPLACE DATA ──────────────────────────────────────────
 const CATEGORIES = [

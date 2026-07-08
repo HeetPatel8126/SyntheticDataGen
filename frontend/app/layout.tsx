@@ -7,6 +7,7 @@ import { Providers } from "./providers"
 import { Toaster } from "sonner"
 import NoiseOverlay from "../components/ui/NoiseOverlay"
 import { ViewTransitions } from 'next-view-transitions'
+import { TransitionDirection } from "@/components/TransitionDirection"
 
 export const metadata: Metadata = {
   title: "Synthetic Data Platform - Generate Production-Ready Data",
@@ -31,6 +32,7 @@ export default function RootLayout({
         <body className={`${inter.variable} font-sans antialiased relative`}>
           <NoiseOverlay />
           <Providers>
+            <TransitionDirection />
             {children}
             <Toaster position="bottom-right" theme="dark" />
           </Providers>

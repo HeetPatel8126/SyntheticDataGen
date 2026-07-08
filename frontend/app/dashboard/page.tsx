@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { generatorApi } from "@/lib/api"
 import { formatNumber, formatBytes, formatDate, cn } from "@/lib/utils"
 import { JOB_STATUSES } from "@/lib/constants"
-import Link from "next/link"
+import { Link } from "next-view-transitions"
 import { FadeInWhenVisible } from "@/components/animations"
 import { AnimatedNumber } from "@/components/animations/AnimatedNumber"
 import { ProgressBar } from "@/components/animations/ProgressRing"
@@ -81,10 +81,10 @@ const fallbackRecentJobs = [
 
 // ─── Premium Stat Card ───────────────────────────────────────────────
 function StatCard({
-  title, value, suffix = '', icon: Icon, delay, isLoading
+  title, value, suffix = '', icon: Icon, delay, isLoading, color, trend
 }: {
   title: string; value: number; suffix?: string; icon: React.ElementType
-  delay: number; isLoading: boolean
+  delay: number; isLoading: boolean; color?: string; trend?: { value: number; positive: boolean }
 }) {
   return (
     <motion.div

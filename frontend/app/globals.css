@@ -36,9 +36,9 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
   
-  /* Smooth scrolling */
+  /* Remove smooth scrolling to prevent conflicts with Next.js View Transitions */
   html {
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
   }
   
   /* Respect reduced motion */
@@ -54,24 +54,40 @@
   }
 }
 
-/* Custom View Transitions */
+/* Custom View Transitions - Forward (Slide DOWN from top) */
 ::view-transition-old(root) {
   animation: none;
   z-index: 1;
+  mix-blend-mode: normal;
 }
 
 ::view-transition-new(root) {
-  animation: slide-up-over 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: slide-down-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
   z-index: 2;
+  mix-blend-mode: normal;
 }
 
-@keyframes slide-up-over {
-  from {
-    transform: translateY(-100%);
-  }
-  to {
-    transform: translateY(0);
-  }
+@keyframes slide-down-in {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+/* Custom View Transitions - Backward (Slide UP to reveal old page) */
+html.back-transition ::view-transition-old(root) {
+  animation: slide-up-out 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  z-index: 2;
+  mix-blend-mode: normal;
+}
+
+html.back-transition ::view-transition-new(root) {
+  animation: none;
+  z-index: 1;
+  mix-blend-mode: normal;
+}
+
+@keyframes slide-up-out {
+  from { transform: translateY(0); }
+  to { transform: translateY(-100%); }
 }
 
 @layer utilities {

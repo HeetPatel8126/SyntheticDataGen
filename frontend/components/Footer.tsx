@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'next-view-transitions';
 
 export default function Footer() {
   return (
@@ -50,38 +51,38 @@ export default function Footer() {
           <div className="col-span-4 md:col-span-3 p-12 border-r b-dark">
             <h4 className="text-xs font-mono text-gray-500 mb-6 uppercase">Quick Links</h4>
             <ul className="flex flex-col gap-4 text-sm text-gray-300">
-              <li><a href="/" className="hover:text-white transition">Home</a></li>
-              <li><a href="/features" className="hover:text-white transition">Features</a></li>
-              <li><a href="/integrations" className="hover:text-white transition">Integrations</a></li>
-              <li><a href="/developers" className="hover:text-white transition">Developers</a></li>
-              <li><a href="/dashboard" className="hover:text-white transition">Dashboard</a></li>
-              <li><a href="/pricing" className="hover:text-white transition">Pricing</a></li>
-              <li><a href="#" className="hover:text-white transition">Articles</a></li>
+              <li><Link href="/" className="hover:text-white transition">Home</Link></li>
+              <li><Link href="/features" className="hover:text-white transition">Features</Link></li>
+              <li><Link href="/integrations" className="hover:text-white transition">Integrations</Link></li>
+              <li><Link href="/developers" className="hover:text-white transition">Developers</Link></li>
+              <li><Link href="/dashboard" className="hover:text-white transition">Dashboard</Link></li>
+              <li><Link href="/pricing" className="hover:text-white transition">Pricing</Link></li>
+              <li><Link href="#" className="hover:text-white transition">Articles</Link></li>
             </ul>
           </div>
           
           <div className="col-span-4 md:col-span-3 p-12 border-r b-dark">
             <h4 className="text-xs font-mono text-gray-500 mb-6 uppercase">Company</h4>
             <ul className="flex flex-col gap-4 text-sm text-gray-300">
-              <li><a href="/about" className="hover:text-white transition">About Us</a></li>
-              <li><a href="/contact" className="hover:text-white transition">Contact Us</a></li>
-              <li><a href="#" className="hover:text-white transition">Book A Call</a></li>
-              <li><a href="#" className="hover:text-white transition">More Templates</a></li>
+              <li><Link href="/about" className="hover:text-white transition">About Us</Link></li>
+              <li><Link href="/contact" className="hover:text-white transition">Contact Us</Link></li>
+              <li><Link href="#" className="hover:text-white transition">Book A Call</Link></li>
+              <li><Link href="#" className="hover:text-white transition">More Templates</Link></li>
             </ul>
           </div>
           
           <div className="col-span-4 md:col-span-3 p-12">
             <h4 className="text-xs font-mono text-gray-500 mb-6 uppercase">Policies</h4>
             <ul className="flex flex-col gap-4 text-sm text-gray-300 mb-12">
-              <li><a href="/security" className="hover:text-white transition">Security & Trust</a></li>
-              <li><a href="#" className="hover:text-white transition">Terms & Conditions</a></li>
-              <li><a href="#" className="hover:text-white transition">Privacy Policy</a></li>
+              <li><Link href="/security" className="hover:text-white transition">Security & Trust</Link></li>
+              <li><Link href="#" className="hover:text-white transition">Terms & Conditions</Link></li>
+              <li><Link href="#" className="hover:text-white transition">Privacy Policy</Link></li>
             </ul>
             <div className="flex gap-2">
-              <a href="#" className="w-8 h-8 rounded bg-black/50 flex items-center justify-center text-xs text-gray-400 hover:text-white hover:bg-black/80 transition">𝕏</a>
-              <a href="#" className="w-8 h-8 rounded bg-black/50 flex items-center justify-center text-xs text-gray-400 hover:text-white hover:bg-black/80 transition">in</a>
-              <a href="#" className="w-8 h-8 rounded bg-black/50 flex items-center justify-center text-xs text-gray-400 hover:text-white hover:bg-black/80 transition">yt</a>
-              <a href="#" className="w-8 h-8 rounded bg-black/50 flex items-center justify-center text-xs text-gray-400 hover:text-white hover:bg-black/80 transition">ig</a>
+              <Link href="#" className="w-8 h-8 rounded bg-black/50 flex items-center justify-center text-xs text-gray-400 hover:text-white hover:bg-black/80 transition">𝕏</Link>
+              <Link href="#" className="w-8 h-8 rounded bg-black/50 flex items-center justify-center text-xs text-gray-400 hover:text-white hover:bg-black/80 transition">in</Link>
+              <Link href="#" className="w-8 h-8 rounded bg-black/50 flex items-center justify-center text-xs text-gray-400 hover:text-white hover:bg-black/80 transition">yt</Link>
+              <Link href="#" className="w-8 h-8 rounded bg-black/50 flex items-center justify-center text-xs text-gray-400 hover:text-white hover:bg-black/80 transition">ig</Link>
             </div>
           </div>
         </div>

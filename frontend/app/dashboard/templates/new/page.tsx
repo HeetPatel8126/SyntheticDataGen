@@ -24,7 +24,7 @@ import {
   Building,
   Wand2
 } from "lucide-react"
-import Link from "next/link"
+import { Link } from "next-view-transitions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
