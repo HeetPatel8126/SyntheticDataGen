@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swiss Grid Refined - Synthetic Data</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background: #f8f9fa; /* slightly cleaner off-white */
+      color: #111; 
+      overflow-x: hidden;
+      background-image: 
+        linear-gradient(to right, rgba(0,0,0,0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0,0,0,0.03) 1px, transparent 1px);
+      background-size: calc(100vw / 12) calc(100vw / 12);
+      background-attachment: fixed;
+    }
+    
+    .swiss-red { color: #d90429; }
+    .bg-swiss-red { background-color: #d90429; }
+    .border-swiss-red { border-color: #d90429; }
+    
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 0;
+      width: 100%;
+    }
+
+    /* Thinner, more elegant borders */
+    .b-bot { border-bottom: 1px solid #ddd; }
+    .b-top { border-top: 1px solid #ddd; }
+    .b-left { border-left: 1px solid #ddd; }
+    .b-right { border-right: 1px solid #ddd; }
+    .b-all { border: 1px solid #ddd; }
+    
+    /* Reveal animations */
+    .reveal-up { opacity: 0; transform: translateY(20px); transition: all 0.6s ease-out; }
+    .reveal-up.active { opacity: 1; transform: translateY(0); }
+
+    @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    .animate-marquee { display: flex; width: 200%; animation: marquee 25s linear infinite; }
+    
+    .hover-bg { transition: background-color 0.2s ease, color 0.2s ease; }
+    .hover-bg:hover { background-color: #111; color: #fff; }
+
+    .data-path { stroke-dasharray: 6; animation: dataMove 3s linear infinite; }
+    @keyframes dataMove { to { stroke-dashoffset: -24; } }
+  </style>
+</head>
+<body class="antialiased">
+
+  <div class="grid-container relative">
+    
+    <!-- 1. NAVBAR (Sticky & Minimal) -->
+    <header class="col-span-12 b-bot flex justify-between items-center py-4 px-[calc(100vw/12)] bg-[#f8f9fa]/95 backdrop-blur-sm fixed top-0 w-full z-50">
+      <div class="text-xl font-semibold tracking-tight">Synthetix.</div>
+      <div class="hidden md:flex gap-8 text-xs font-medium uppercase tracking-widest text-gray-500">
+        <a href="#platform" class="hover:text-[#111] transition">Platform</a>
+        <a href="#architecture" class="hover:text-[#111] transition">Architecture</a>
+        <a href="#metrics" class="hover:text-[#111] transition">Metrics</a>
+      </div>
+      <button class="bg-[#111] text-white text-xs font-medium px-5 py-2 hover:bg-swiss-red transition rounded-sm">
+        Dashboard
+      </button>
+    </header>
+
+    <div class="col-span-12 h-20"></div>
+
+    <!-- 2. HERO SECTION -->
+    <main class="col-span-12 grid grid-cols-12 gap-0 py-16 px-[calc(100vw/12)] content-start">
+      <div class="col-span-12 md:col-start-2 md:col-span-7 mb-12 reveal-up">
+        <div class="text-[10px] font-semibold uppercase tracking-widest text-swiss-red mb-6 border border-swiss-red/20 inline-block px-3 py-1 rounded-full bg-swiss-red/5">
+          Engine V4.0 Active
+        </div>
+        <h1 class="text-5xl md:text-6xl font-light leading-tight tracking-tight text-[#111]">
+          The new standard for <br>
+          <span class="font-semibold">synthetic data generation.</span>
+        </h1>
+      </div>
+
+      <div class="col-span-12 md:col-start-2 md:col-span-5 pr-8 reveal-up" style="transition-delay: 0.1s;">
+        <p class="text-base leading-relaxed text-gray-600 font-light mb-8">
+          A purely generative protocol that learns the structural distribution of your production databases, outputting a perfectly anonymous, statistically identical twin for machine learning.
+        </p>
+        <div class="flex gap-4">
+          <button class="bg-[#111] text-white px-6 py-3 text-sm font-medium hover:bg-swiss-red transition rounded-sm flex items-center gap-2 group">
+            Execute Run <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
+          </button>
+          <button class="b-all bg-white text-[#111] px-6 py-3 text-sm font-medium hover:bg-gray-50 transition rounded-sm">
+            Read Docs
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- 3. SCROLLING TICKER (Refined) -->
+    <section class="col-span-12 border-y border-[#ddd] bg-white text-gray-400 py-3 overflow-hidden flex whitespace-nowrap text-xs font-medium uppercase tracking-widest">
+      <div class="animate-marquee">
+        <span class="mx-6">Epsilon < 0.1 Guarantee</span> <span class="mx-6 text-gray-300">|</span>
+        <span class="mx-6">10M Rows Per Second</span> <span class="mx-6 text-gray-300">|</span>
+        <span class="mx-6">Zero PII Leakage</span> <span class="mx-6 text-gray-300">|</span>
+        <span class="mx-6">Pearson Correlation 0.999</span> <span class="mx-6 text-gray-300">|</span>
+        <span class="mx-6">Epsilon < 0.1 Guarantee</span> <span class="mx-6 text-gray-300">|</span>
+        <span class="mx-6">10M Rows Per Second</span> <span class="mx-6 text-gray-300">|</span>
+        <span class="mx-6">Zero PII Leakage</span> <span class="mx-6 text-gray-300">|</span>
+        <span class="mx-6">Pearson Correlation 0.999</span> <span class="mx-6 text-gray-300">|</span>
+      </div>
+    </section>
+
+    <!-- 4. FEATURES GRID -->
+    <section id="platform" class="col-span-12 py-20 px-[calc(100vw/12)]">
+      <div class="flex justify-between items-end mb-12 border-b border-[#111] pb-4 reveal-up">
+        <h2 class="text-3xl font-light tracking-tight">Core Capabilities</h2>
+        <span class="text-xs font-semibold text-gray-400 uppercase tracking-widest">System Overview</span>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="b-all p-6 bg-white hover-bg reveal-up rounded-sm cursor-default">
+          <div class="text-xs font-bold text-gray-400 mb-6 uppercase tracking-widest">01</div>
+          <h4 class="text-lg font-medium mb-3">Secure Ingestion</h4>
+          <p class="font-light text-sm leading-relaxed opacity-80">Connect production databases via encrypted tunnels. We support all major SQL and NoSQL environments with zero downtime.</p>
+        </div>
+
+        <div class="b-all p-6 bg-white hover-bg reveal-up rounded-sm cursor-default" style="transition-delay: 0.1s;">
+          <div class="text-xs font-bold text-gray-400 mb-6 uppercase tracking-widest">02</div>
+          <h4 class="text-lg font-medium mb-3">Latent Mapping</h4>
+          <p class="font-light text-sm leading-relaxed opacity-80">Our models isolate statistical probability distributions, discarding all Personally Identifiable Information instantly at the edge.</p>
+        </div>
+
+        <div class="b-all p-6 bg-white hover-bg reveal-up rounded-sm cursor-default" style="transition-delay: 0.2s;">
+          <div class="text-xs font-bold text-gray-400 mb-6 uppercase tracking-widest">03</div>
+          <h4 class="text-lg font-medium mb-3">Infinite Synthesis</h4>
+          <p class="font-light text-sm leading-relaxed opacity-80">Sample continuously from the latent space. Generate billions of rows of structurally identical, privacy-safe data on demand.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. INTERACTIVE ARCHITECTURE -->
+    <section id="architecture" class="col-span-12 py-20 px-[calc(100vw/12)] bg-[#111] text-white">
+      <div class="flex justify-between items-end mb-12 border-b border-[#333] pb-4 reveal-up">
+        <h2 class="text-3xl font-light tracking-tight">Data Architecture</h2>
+        <span class="text-xs font-semibold text-gray-500 uppercase tracking-widest">Topology Diagram</span>
+      </div>
+      
+      <div class="relative h-[250px] flex items-center justify-between z-10 bg-[#161616] b-all border-[#333] p-8 rounded-sm overflow-hidden reveal-up" style="transition-delay: 0.1s;">
+        <!-- Connecting Line -->
+        <svg class="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
+          <line x1="15%" y1="50%" x2="85%" y2="50%" stroke="#d90429" stroke-width="1.5" class="data-path" />
+        </svg>
+
+        <div class="w-32 h-32 rounded-full border border-[#444] flex flex-col items-center justify-center bg-[#111] z-10 hover:border-white transition-colors duration-300">
+          <span class="font-medium text-sm">Source</span>
+          <span class="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">Raw Data</span>
+        </div>
+
+        <div class="w-40 h-40 border border-swiss-red bg-swiss-red/10 flex flex-col items-center justify-center z-10 hover:bg-swiss-red hover:text-white transition-colors duration-300 backdrop-blur-sm rounded-sm">
+          <span class="font-semibold text-lg text-swiss-red">Engine</span>
+          <span class="text-[10px] text-swiss-red/70 mt-1 uppercase tracking-widest">Latent Model</span>
+        </div>
+
+        <div class="w-32 h-32 rounded-full border border-[#444] flex flex-col items-center justify-center bg-[#111] z-10 hover:border-white transition-colors duration-300">
+          <span class="font-medium text-sm">Output</span>
+          <span class="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">Synth DB</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. TECHNICAL METRICS -->
+    <section id="metrics" class="col-span-12 py-20 px-[calc(100vw/12)]">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-8 reveal-up">
+        <div class="col-span-12 md:col-span-4 pr-8">
+          <div class="w-8 h-[2px] bg-swiss-red mb-4"></div>
+          <h2 class="text-2xl font-light tracking-tight mb-3">Performance Metrics</h2>
+          <p class="text-sm font-light text-gray-500 leading-relaxed">Enterprise-grade synthesis designed for absolute scale and strict compliance audits.</p>
+        </div>
+
+        <div class="col-span-12 md:col-span-8 bg-white b-all rounded-sm p-2">
+          <!-- Data Row -->
+          <div class="flex justify-between items-center b-bot py-3 px-4 hover:bg-gray-50 transition cursor-default">
+            <div class="text-xs font-semibold uppercase tracking-widest text-gray-500">Statistical Fidelity</div>
+            <div class="text-sm text-gray-500 font-light hidden md:block">Pearson Correlation Coefficient</div>
+            <div class="text-lg font-medium">0.999</div>
+          </div>
+          <!-- Data Row -->
+          <div class="flex justify-between items-center b-bot py-3 px-4 hover:bg-gray-50 transition cursor-default">
+            <div class="text-xs font-semibold uppercase tracking-widest text-gray-500">Differential Privacy</div>
+            <div class="text-sm text-gray-500 font-light hidden md:block">Epsilon Value Guarantee</div>
+            <div class="text-lg font-medium">&lt; 0.01</div>
+          </div>
+          <!-- Data Row -->
+          <div class="flex justify-between items-center py-3 px-4 hover:bg-gray-50 transition cursor-default">
+            <div class="text-xs font-semibold uppercase tracking-widest text-gray-500">Cluster Throughput</div>
+            <div class="text-sm text-gray-500 font-light hidden md:block">Rows Generated Per Second</div>
+            <div class="text-lg font-medium">1,250,000</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. CALL TO ACTION -->
+    <section class="col-span-12 bg-swiss-red text-white py-24 px-[calc(100vw/12)] text-center reveal-up">
+      <h2 class="text-4xl font-light tracking-tight mb-8">
+        Ready to initialize?
+      </h2>
+      <button class="bg-[#111] text-white px-8 py-3 text-sm font-medium hover:bg-white hover:text-black transition rounded-sm shadow-xl">
+        Request API Key
+      </button>
+    </section>
+
+    <!-- 8. FOOTER -->
+    <footer class="col-span-12 py-10 px-[calc(100vw/12)] flex flex-col md:flex-row justify-between items-center text-[10px] font-medium uppercase tracking-widest bg-white border-t border-[#ddd]">
+      <div class="mb-4 md:mb-0 flex items-center gap-4">
+        <span class="font-bold text-sm tracking-tight capitalize">Synthetix.</span>
+        <span class="text-gray-400">&copy; 2026 Systems</span>
+      </div>
+      
+      <div class="flex gap-6 text-gray-500 mb-4 md:mb-0">
+        <a href="#" class="hover:text-[#111] transition">Docs</a>
+        <a href="#" class="hover:text-[#111] transition">Whitepaper</a>
+        <a href="#" class="hover:text-[#111] transition">Privacy</a>
+        <a href="#" class="hover:text-[#111] transition">Terms</a>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+        <span class="text-gray-400">All Systems Operational</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("active");
+          }
+        });
+      }, { threshold: 0.1 });
+
+      document.querySelectorAll(".reveal-up").forEach(el => observer.observe(el));
+    });
+  </script>
+
+</body>
+</html>

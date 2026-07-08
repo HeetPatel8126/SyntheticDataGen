@@ -49,7 +49,7 @@ function AnimatedTab({
   onChange: (tab: string) => void
 }) {
   return (
-    <div className="flex gap-1 p-1 rounded-xl bg-white/5 border border-white/10">
+    <div className="flex gap-1 p-1 rounded-sm border border-black bg-white">
       <LayoutGroup>
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id
@@ -58,19 +58,19 @@ function AnimatedTab({
               key={tab.id}
               onClick={() => onChange(tab.id)}
               className={cn(
-                "relative px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                "relative px-4 py-2.5 rounded-sm text-[10px] font-mono font-bold uppercase tracking-widest transition-colors",
                 "flex items-center gap-2",
-                isActive ? "text-white" : "text-gray-400 hover:text-white"
+                isActive ? "text-white" : "text-gray-500 hover:text-black hover:bg-black/5"
               )}
             >
               {isActive && (
                 <motion.div
                   layoutId="active-tab-bg"
-                  className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 rounded-lg border border-purple-500/30"
+                  className="absolute inset-0 bg-black rounded-sm border border-black"
                   transition={{ type: "spring", stiffness: 500, damping: 35 }}
                 />
               )}
-              <tab.icon className={cn("w-4 h-4 relative z-10", isActive && "text-purple-400")} />
+              <tab.icon className={cn("w-3.5 h-3.5 relative z-10", isActive ? "text-white" : "text-gray-500")} />
               <span className="relative z-10">{tab.label}</span>
             </button>
           )
@@ -94,23 +94,26 @@ function ToggleSwitch({
 }) {
   return (
     <motion.div 
-      className="flex items-center justify-between p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+      className="flex items-center justify-between p-4 rounded-sm border border-black/10 bg-white hover:border-black transition-colors"
       whileHover={{ scale: 1.01 }}
     >
       <div>
-        <p className="font-medium">{label}</p>
-        <p className="text-sm text-gray-400">{description}</p>
+        <p className="font-bold text-black uppercase tracking-tight">{label}</p>
+        <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mt-1">{description}</p>
       </div>
       <button
         onClick={() => onChange(!checked)}
         className={cn(
-          "relative w-14 h-8 rounded-full transition-colors duration-300",
-          checked ? "bg-gradient-to-r from-purple-500 to-indigo-500" : "bg-white/10"
+          "relative w-14 h-8 rounded-sm transition-colors duration-300 border border-black",
+          checked ? "bg-black" : "bg-gray-100"
         )}
       >
         <motion.div
-          className="absolute top-1 w-6 h-6 rounded-full bg-white shadow-lg"
-          animate={{ left: checked ? '1.75rem' : '0.25rem' }}
+          className="absolute top-1 w-6 h-6 rounded-sm shadow-sm"
+          animate={{ 
+            left: checked ? '1.75rem' : '0.25rem',
+            backgroundColor: checked ? '#fff' : '#000'
+          }}
           transition={{ type: "spring", stiffness: 500, damping: 35 }}
         >
           {checked && (
@@ -119,7 +122,7 @@ function ToggleSwitch({
               animate={{ scale: 1 }}
               className="absolute inset-0 flex items-center justify-center"
             >
-              <Check className="w-3 h-3 text-purple-500" />
+              <Check className="w-4 h-4 text-black" />
             </motion.div>
           )}
         </motion.div>
@@ -128,7 +131,6 @@ function ToggleSwitch({
   )
 }
 
-// Animated Input Field
 function AnimatedInput({ 
   label, 
   type = "text",
@@ -151,15 +153,15 @@ function AnimatedInput({
 
   return (
     <motion.div
-      animate={isFocused ? { scale: 1.02 } : { scale: 1 }}
+      animate={isFocused ? { scale: 1.01 } : { scale: 1 }}
       transition={{ type: "spring", stiffness: 500, damping: 35 }}
     >
-      <label className="text-sm font-medium mb-2 block text-gray-300">{label}</label>
+      <label className="text-[10px] font-mono font-bold uppercase tracking-widest mb-2 block text-black">{label}</label>
       <div className="relative">
         {Icon && (
           <Icon className={cn(
             "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors",
-            isFocused ? "text-purple-400" : "text-gray-500"
+            isFocused ? "text-black" : "text-gray-400"
           )} />
         )}
         <Input 
@@ -170,8 +172,8 @@ function AnimatedInput({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           className={cn(
-            "bg-white/5 border-white/10 transition-all",
-            "focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20",
+            "bg-white border-black/20 text-black rounded-sm font-mono text-sm transition-all shadow-none",
+            "focus:border-black focus:ring-0 focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]",
             Icon && "pl-10",
             type === 'password' && "pr-10"
           )}
@@ -180,19 +182,11 @@ function AnimatedInput({
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors"
           >
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         )}
-        <motion.div
-          className="absolute inset-0 rounded-md pointer-events-none"
-          animate={isFocused ? { 
-            boxShadow: "0 0 0 2px rgba(139, 92, 246, 0.2)"
-          } : { 
-            boxShadow: "0 0 0 0px rgba(139, 92, 246, 0)"
-          }}
-        />
       </div>
     </motion.div>
   )
@@ -225,16 +219,16 @@ function APIKeyCard({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="p-4 rounded-xl border border-white/10 bg-white/5 hover:border-purple-500/30 transition-all group"
+      className="p-4 rounded-sm border border-black/10 bg-white hover:border-black transition-all group"
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500/20 to-indigo-500/20 flex items-center justify-center border border-purple-500/30">
-            <Key className="w-5 h-5 text-purple-400" />
+          <div className="w-10 h-10 rounded-sm bg-black flex items-center justify-center border border-black">
+            <Key className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="font-medium">{name}</p>
-            <p className="text-xs text-gray-500">Created {createdAt}</p>
+            <p className="font-bold uppercase tracking-tight text-black">{name}</p>
+            <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Created {createdAt}</p>
           </div>
         </div>
         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -243,10 +237,10 @@ function APIKeyCard({
               variant="outline" 
               size="sm"
               onClick={handleCopy}
-              className="border-white/10 hover:border-purple-500/50"
+              className="border-black/10 hover:border-black rounded-sm text-black h-8 w-8 p-0"
             >
               {copied ? (
-                <Check className="w-4 h-4 text-green-400" />
+                <Check className="w-4 h-4" />
               ) : (
                 <Copy className="w-4 h-4" />
               )}
@@ -257,14 +251,14 @@ function APIKeyCard({
               variant="outline" 
               size="sm"
               onClick={onRevoke}
-              className="border-red-500/30 hover:border-red-500/50 hover:bg-red-500/10"
+              className="border-red-500/30 hover:border-red-500 hover:bg-red-50 hover:text-red-600 rounded-sm h-8 w-8 p-0"
             >
-              <Trash2 className="w-4 h-4 text-red-400" />
+              <Trash2 className="w-4 h-4 text-red-500" />
             </Button>
           </motion.div>
         </div>
       </div>
-      <div className="font-mono text-sm text-purple-400 bg-black/30 px-3 py-2 rounded-lg">
+      <div className="font-mono text-sm text-black border border-black/10 bg-gray-50 px-3 py-2 rounded-sm overflow-x-auto whitespace-nowrap">
         {keyValue}
       </div>
     </motion.div>
@@ -286,21 +280,21 @@ function ThemeSelector({ selected, onSelect }: { selected: string, onSelect: (th
           key={theme.id}
           onClick={() => onSelect(theme.id)}
           className={cn(
-            "p-4 rounded-xl border transition-all flex flex-col items-center gap-2",
+            "p-4 rounded-sm border transition-all flex flex-col items-center gap-2",
             selected === theme.id 
-              ? "border-purple-500 bg-purple-500/10" 
-              : "border-white/10 hover:border-white/20 bg-white/5"
+              ? "border-black bg-black text-white" 
+              : "border-black/10 bg-white hover:border-black/50 text-gray-500 hover:text-black"
           )}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
           <theme.icon className={cn(
-            "w-6 h-6",
-            selected === theme.id ? "text-purple-400" : "text-gray-400"
+            "w-5 h-5",
+            selected === theme.id ? "text-white" : ""
           )} />
           <span className={cn(
-            "text-sm font-medium",
-            selected === theme.id ? "text-white" : "text-gray-400"
+            "text-[10px] font-mono font-bold uppercase tracking-widest",
+            selected === theme.id ? "text-white" : ""
           )}>
             {theme.label}
           </span>
@@ -308,7 +302,7 @@ function ThemeSelector({ selected, onSelect }: { selected: string, onSelect: (th
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="w-2 h-2 rounded-full bg-purple-500"
+              className="w-1.5 h-1.5 rounded-none bg-white"
             />
           )}
         </motion.button>
@@ -341,10 +335,9 @@ function SaveButton({
   return (
     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
       <Button 
-        variant="gradient" 
         onClick={handleClick}
         disabled={isLoading}
-        className="gap-2 min-w-[140px]"
+        className="gap-2 min-w-[140px] bg-black text-white hover:bg-black/90 rounded-sm font-mono text-[10px] uppercase font-bold tracking-widest h-10 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
       >
         <AnimatePresence mode="wait">
           {isLoading ? (
@@ -363,7 +356,7 @@ function SaveButton({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.5 }}
             >
-              <Check className="w-4 h-4 text-green-400" />
+              <Check className="w-4 h-4 text-white" />
             </motion.div>
           ) : (
             <motion.div
@@ -485,12 +478,10 @@ export default function SettingsPage() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-2">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-              Settings
-            </span>
+          <h1 className="text-4xl md:text-5xl font-bold uppercase tracking-tight text-black mb-2">
+            Settings
           </h1>
-          <p className="text-gray-400">Manage your account preferences and configurations</p>
+          <p className="text-gray-500 font-mono text-[10px] uppercase tracking-widest">Manage your account preferences and configurations</p>
         </motion.div>
       </FadeInWhenVisible>
 
@@ -511,13 +502,13 @@ export default function SettingsPage() {
           {/* Profile Tab */}
           {activeTab === 'profile' && (
             <div className="space-y-6">
-              <SpotlightCard>
+              <Card className="bg-white border-black/10 shadow-sm rounded-sm">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="w-5 h-5 text-purple-400" />
+                  <CardTitle className="flex items-center gap-2 font-bold uppercase tracking-tight text-black">
+                    <User className="w-5 h-5 text-black" />
                     Profile Information
                   </CardTitle>
-                  <CardDescription>Update your personal information</CardDescription>
+                  <CardDescription className="font-mono text-[10px] uppercase tracking-widest">Update your personal information</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
@@ -548,20 +539,20 @@ export default function SettingsPage() {
                     Save Changes
                   </SaveButton>
                 </CardContent>
-              </SpotlightCard>
+              </Card>
             </div>
           )}
 
           {/* API Keys Tab */}
           {activeTab === 'api' && (
             <div className="space-y-6">
-              <SpotlightCard>
+              <Card className="bg-white border-black/10 shadow-sm rounded-sm">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Key className="w-5 h-5 text-purple-400" />
+                  <CardTitle className="flex items-center gap-2 font-bold uppercase tracking-tight text-black">
+                    <Key className="w-5 h-5 text-black" />
                     API Keys
                   </CardTitle>
-                  <CardDescription>Manage your API keys for programmatic access</CardDescription>
+                  <CardDescription className="font-mono text-[10px] uppercase tracking-widest">Manage your API keys for programmatic access</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <AnimatePresence>
@@ -594,8 +585,7 @@ export default function SettingsPage() {
                     whileTap={{ scale: 0.98 }}
                   >
                     <Button 
-                      variant="gradient" 
-                      className="gap-2"
+                      className="gap-2 bg-black text-white hover:bg-black/90 rounded-sm font-mono text-[10px] uppercase font-bold tracking-widest h-10 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                       onClick={() => {
                         const newKey = {
                           id: Date.now().toString(),
@@ -612,30 +602,30 @@ export default function SettingsPage() {
                     </Button>
                   </motion.div>
 
-                  <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30 flex gap-3">
-                    <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                  <div className="p-4 rounded-sm bg-amber-50 border border-amber-200 flex gap-3">
+                    <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-yellow-400">Keep your keys secure</p>
-                      <p className="text-xs text-yellow-400/70 mt-1">
+                      <p className="text-sm font-medium text-amber-800">Keep your keys secure</p>
+                      <p className="text-xs text-amber-700/80 mt-1">
                         Never share your API keys publicly or commit them to version control.
                       </p>
                     </div>
                   </div>
                 </CardContent>
-              </SpotlightCard>
+              </Card>
             </div>
           )}
 
           {/* Notifications Tab */}
           {activeTab === 'notifications' && (
             <div className="space-y-6">
-              <SpotlightCard>
+              <Card className="bg-white border-black/10 shadow-sm rounded-sm">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Bell className="w-5 h-5 text-purple-400" />
+                  <CardTitle className="flex items-center gap-2 font-bold uppercase tracking-tight text-black">
+                    <Bell className="w-5 h-5 text-black" />
                     Notification Preferences
                   </CardTitle>
-                  <CardDescription>Choose what updates you want to receive</CardDescription>
+                  <CardDescription className="font-mono text-[10px] uppercase tracking-widest">Choose what updates you want to receive</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <ToggleSwitch
@@ -666,20 +656,20 @@ export default function SettingsPage() {
                     Save Preferences
                   </SaveButton>
                 </CardContent>
-              </SpotlightCard>
+              </Card>
             </div>
           )}
 
           {/* Appearance Tab */}
           {activeTab === 'appearance' && (
             <div className="space-y-6">
-              <SpotlightCard>
+              <Card className="bg-white border-black/10 shadow-sm rounded-sm">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Palette className="w-5 h-5 text-purple-400" />
+                  <CardTitle className="flex items-center gap-2 font-bold uppercase tracking-tight text-black">
+                    <Palette className="w-5 h-5 text-black" />
                     Appearance
                   </CardTitle>
-                  <CardDescription>Customize the look and feel of your dashboard</CardDescription>
+                  <CardDescription className="font-mono text-[10px] uppercase tracking-widest">Customize the look and feel of your dashboard</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
@@ -687,12 +677,12 @@ export default function SettingsPage() {
                     <ThemeSelector selected={theme} onSelect={setTheme} />
                   </div>
                   
-                  <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+                  <div className="p-4 rounded-sm bg-gray-50 border border-black/10">
                     <div className="flex items-center gap-3 mb-3">
-                      <Zap className="w-5 h-5 text-purple-400" />
-                      <p className="font-medium">Reduce Motion</p>
+                      <Zap className="w-5 h-5 text-black" />
+                      <p className="font-bold uppercase tracking-tight text-black">Reduce Motion</p>
                     </div>
-                    <p className="text-sm text-gray-400 mb-4">
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500 mb-4">
                       Reduces animations and transitions for better accessibility
                     </p>
                     <ToggleSwitch
@@ -707,20 +697,20 @@ export default function SettingsPage() {
                     Save Appearance
                   </SaveButton>
                 </CardContent>
-              </SpotlightCard>
+              </Card>
             </div>
           )}
 
           {/* Security Tab */}
           {activeTab === 'security' && (
             <div className="space-y-6">
-              <SpotlightCard>
+              <Card className="bg-white border-black/10 shadow-sm rounded-sm">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="w-5 h-5 text-purple-400" />
+                  <CardTitle className="flex items-center gap-2 font-bold uppercase tracking-tight text-black">
+                    <Shield className="w-5 h-5 text-black" />
                     Security Settings
                   </CardTitle>
-                  <CardDescription>Manage your account security and password</CardDescription>
+                  <CardDescription className="font-mono text-[10px] uppercase tracking-widest">Manage your account security and password</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <AnimatedInput
@@ -746,9 +736,9 @@ export default function SettingsPage() {
                   />
                   
                   {/* Password requirements */}
-                  <div className="p-4 rounded-lg bg-white/5 border border-white/10">
-                    <p className="text-sm font-medium mb-3">Password Requirements</p>
-                    <ul className="space-y-2 text-sm text-gray-400">
+                  <div className="p-4 rounded-sm bg-gray-50 border border-black/10">
+                    <p className="font-bold uppercase tracking-tight text-black mb-3">Password Requirements</p>
+                    <ul className="space-y-2 font-mono text-[10px] uppercase tracking-widest text-gray-500">
                       {[
                         'At least 8 characters',
                         'Contains uppercase and lowercase letters',
@@ -762,7 +752,7 @@ export default function SettingsPage() {
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: i * 0.1 }}
                         >
-                          <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                          <div className="w-1.5 h-1.5 rounded-none bg-black" />
                           {req}
                         </motion.li>
                       ))}
@@ -773,35 +763,35 @@ export default function SettingsPage() {
                     Update Password
                   </SaveButton>
                 </CardContent>
-              </SpotlightCard>
+              </Card>
 
               {/* Two-Factor Authentication */}
-              <SpotlightCard>
+              <Card className="bg-white border-black/10 shadow-sm rounded-sm">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-purple-400" />
+                  <CardTitle className="flex items-center gap-2 font-bold uppercase tracking-tight text-black">
+                    <Clock className="w-5 h-5 text-black" />
                     Two-Factor Authentication
                   </CardTitle>
-                  <CardDescription>Add an extra layer of security to your account</CardDescription>
+                  <CardDescription className="font-mono text-[10px] uppercase tracking-widest">Add an extra layer of security to your account</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between p-4 rounded-lg bg-white/5">
+                  <div className="flex items-center justify-between p-4 rounded-sm bg-gray-50 border border-black/10">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center border border-green-500/30">
-                        <Shield className="w-6 h-6 text-green-400" />
+                      <div className="w-12 h-12 rounded-sm bg-white flex items-center justify-center border border-black/20">
+                        <Shield className="w-6 h-6 text-black" />
                       </div>
                       <div>
-                        <p className="font-medium">2FA is not enabled</p>
-                        <p className="text-sm text-gray-400">Protect your account with two-factor authentication</p>
+                        <p className="font-bold uppercase tracking-tight text-black">2FA is not enabled</p>
+                        <p className="font-mono text-[10px] uppercase tracking-widest text-gray-500">Protect your account with two-factor authentication</p>
                       </div>
                     </div>
-                    <Button variant="gradient" className="gap-2">
+                    <Button className="gap-2 bg-black text-white hover:bg-black/90 rounded-sm font-mono text-[10px] uppercase font-bold tracking-widest h-10 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                       <Plus className="w-4 h-4" />
                       Enable 2FA
                     </Button>
                   </div>
                 </CardContent>
-              </SpotlightCard>
+              </Card>
             </div>
           )}
         </motion.div>

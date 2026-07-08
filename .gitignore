@@ -14,7 +14,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+/lib/
 lib64/
 parts/
 sdist/
@@ -75,6 +75,7 @@ generated_data/
 *.csv
 *.json
 !package.json
+!package-lock.json
 test.db
 *.log
 

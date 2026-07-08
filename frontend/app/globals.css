@@ -54,6 +54,26 @@
   }
 }
 
+/* Custom View Transitions */
+::view-transition-old(root) {
+  animation: none;
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  animation: slide-up-over 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  z-index: 2;
+}
+
+@keyframes slide-up-over {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
 @layer utilities {
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400;
@@ -219,7 +239,7 @@
   background: linear-gradient(
     to right,
     transparent 0%,
-    rgba(139, 92, 246, 0.1) 50%,
+    rgba(0, 0, 0, 0.05) 50%,
     transparent 100%
   );
   background-size: 1000px 100%;

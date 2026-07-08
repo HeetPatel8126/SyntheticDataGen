@@ -80,24 +80,17 @@ function CategoryFilter({
               key={cat}
               onClick={() => onSelect(cat)}
               className={cn(
-                "relative px-4 py-2 rounded-full text-sm font-medium transition-colors",
-                "flex items-center gap-2",
+                "relative px-4 py-2 rounded-sm text-[10px] font-mono font-bold uppercase tracking-widest transition-colors",
+                "flex items-center gap-2 border border-black",
                 isSelected 
-                  ? "text-white" 
-                  : "text-gray-400 hover:text-white bg-white/5 hover:bg-white/10"
+                  ? "bg-black text-white" 
+                  : "bg-white text-black hover:bg-black/5"
               )}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              {isSelected && (
-                <motion.div
-                  layoutId="category-pill"
-                  className="absolute inset-0 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"
-                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                />
-              )}
               <span className="relative z-10 flex items-center gap-2">
-                {cat !== 'all' && <Icon className="w-4 h-4" />}
+                {cat !== 'all' && <Icon className="w-3.5 h-3.5" />}
                 <span className="capitalize">{cat}</span>
               </span>
             </motion.button>
@@ -144,35 +137,16 @@ function TemplateCard({
       <TiltCard maxTilt={5} scale={1.02}>
         <Card className={cn(
           "h-full relative overflow-hidden transition-all duration-300",
-          "border-white/10 hover:border-purple-500/50",
-          "hover:shadow-2xl hover:shadow-purple-500/20"
+          "border-black/10 hover:border-black rounded-sm bg-white",
+          "hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
         )}>
-          {/* Gradient border effect */}
-          <motion.div
-            className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-            style={{
-              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(99, 102, 241, 0.2))',
-              padding: '1px',
-            }}
-          />
-
-          {/* Glow effect */}
-          <motion.div
-            className="absolute -inset-1 rounded-lg opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500"
-            style={{
-              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(99, 102, 241, 0.3))',
-            }}
-          />
-
-          <div className="relative h-full flex flex-col bg-card rounded-lg">
+          <div className="relative h-full flex flex-col bg-white rounded-sm">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between gap-2 mb-3">
-                {/* Icon container with animated gradient */}
+                {/* Icon container */}
                 <motion.div 
                   className={cn(
-                    "w-12 h-12 rounded-xl flex items-center justify-center",
-                    "bg-gradient-to-br from-purple-500/20 to-indigo-500/20",
-                    "border border-purple-500/30"
+                    "w-12 h-12 rounded-sm flex items-center justify-center bg-black"
                   )}
                   animate={isHovered ? { 
                     scale: [1, 1.1, 1],
@@ -180,7 +154,7 @@ function TemplateCard({
                   } : {}}
                   transition={{ duration: 0.5 }}
                 >
-                  <Icon className="w-6 h-6 text-purple-400" />
+                  <Icon className="w-5 h-5 text-white" />
                 </motion.div>
 
                 {/* Data type badge */}
@@ -190,10 +164,10 @@ function TemplateCard({
                   transition={{ delay: 0.2 }}
                 >
                   <Badge 
-                    variant="secondary" 
+                    variant="outline" 
                     className={cn(
-                      "capitalize text-xs",
-                      "bg-white/5 hover:bg-white/10 transition-colors"
+                      "capitalize text-[10px] font-mono uppercase tracking-widest",
+                      "border-black/10 text-gray-500 bg-gray-50 rounded-sm"
                     )}
                   >
                     {template.data_type}
@@ -201,10 +175,10 @@ function TemplateCard({
                 </motion.div>
               </div>
 
-              <CardTitle className="line-clamp-1 group-hover:text-purple-400 transition-colors">
+              <CardTitle className="line-clamp-1 text-black text-xl font-bold uppercase tracking-tight group-hover:tracking-widest transition-all">
                 {template.name}
               </CardTitle>
-              <CardDescription className="line-clamp-2 mt-2">
+              <CardDescription className="line-clamp-2 mt-2 font-mono text-[10px] text-gray-500 uppercase tracking-widest">
                 {template.description}
               </CardDescription>
             </CardHeader>
@@ -212,8 +186,8 @@ function TemplateCard({
             <CardContent className="flex-1 flex flex-col justify-between pt-0">
               {/* Template info */}
               <div className="space-y-3 mb-4">
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <Clock className="w-3 h-3" />
+                <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-gray-400">
+                  <Clock className="w-3.5 h-3.5" />
                   <span>Created {formatDate(template.created_at)}</span>
                 </div>
                 
@@ -222,13 +196,13 @@ function TemplateCard({
                   {Object.keys(template.schema || {}).slice(0, 3).map((field) => (
                     <span 
                       key={field}
-                      className="px-2 py-0.5 rounded-md text-[10px] bg-white/5 text-gray-400"
+                      className="px-2 py-0.5 border border-black/10 rounded-none text-[10px] font-mono bg-gray-50 text-gray-500"
                     >
                       {field}
                     </span>
                   ))}
                   {Object.keys(template.schema || {}).length > 3 && (
-                    <span className="px-2 py-0.5 rounded-md text-[10px] bg-purple-500/10 text-purple-400">
+                    <span className="px-2 py-0.5 rounded-none text-[10px] font-mono font-bold bg-black text-white">
                       +{Object.keys(template.schema || {}).length - 3} more
                     </span>
                   )}
@@ -243,12 +217,12 @@ function TemplateCard({
                   whileTap={{ scale: 0.98 }}
                 >
                   <Button
-                    variant="gradient"
+                    variant="outline"
                     size="sm"
-                    className="w-full gap-2"
+                    className="w-full gap-2 border-black/10 hover:border-black rounded-sm font-mono text-[10px] uppercase font-bold"
                     onClick={onUse}
                   >
-                    <Play className="w-4 h-4" />
+                    <Play className="w-3.5 h-3.5" />
                     Use Template
                   </Button>
                 </motion.div>
@@ -258,7 +232,7 @@ function TemplateCard({
                     variant="outline" 
                     size="sm"
                     onClick={onPreview}
-                    className="border-white/10 hover:border-purple-500/50"
+                    className="border-black/10 hover:border-black rounded-sm"
                   >
                     <Eye className="w-4 h-4" />
                   </Button>
@@ -269,7 +243,7 @@ function TemplateCard({
                     <Button 
                       variant="outline" 
                       size="sm"
-                      className="border-white/10 hover:border-purple-500/50"
+                      className="border-black/10 hover:border-black rounded-sm"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -282,9 +256,9 @@ function TemplateCard({
                     size="sm"
                     onClick={onDelete}
                     disabled={isDeleting}
-                    className="border-red-500/30 hover:border-red-500/50 hover:bg-red-500/10"
+                    className="border-red-500/30 hover:border-red-500 hover:bg-red-50 hover:text-red-600 rounded-sm"
                   >
-                    <Trash2 className="w-4 h-4 text-red-400" />
+                    <Trash2 className="w-4 h-4 text-red-500" />
                   </Button>
                 </motion.div>
               </div>
@@ -327,23 +301,23 @@ function PreviewModal({
           className="w-full max-w-2xl max-h-[80vh] overflow-auto"
           onClick={(e) => e.stopPropagation()}
         >
-          <Card className="border-purple-500/30 shadow-2xl shadow-purple-500/20">
-            <CardHeader className="border-b border-white/10">
+          <Card className="border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-sm bg-white">
+            <CardHeader className="border-b border-black/10">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
+                  <div className="w-14 h-14 rounded-sm bg-black flex items-center justify-center">
                     <Icon className="w-7 h-7 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="text-2xl">{template.name}</CardTitle>
-                    <CardDescription className="mt-1">{template.description}</CardDescription>
+                    <CardTitle className="text-2xl font-bold uppercase tracking-tight text-black">{template.name}</CardTitle>
+                    <CardDescription className="mt-1 font-mono text-[10px] uppercase tracking-widest text-gray-500">{template.description}</CardDescription>
                   </div>
                 </div>
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={onClose}
-                  className="hover:bg-white/10"
+                  className="hover:bg-black/5 text-black"
                 >
                   <X className="w-5 h-5" />
                 </Button>
@@ -353,34 +327,34 @@ function PreviewModal({
             <CardContent className="p-6 space-y-6">
               {/* Template info */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-lg bg-white/5">
-                  <p className="text-xs text-gray-500 mb-1">Data Type</p>
-                  <p className="font-medium capitalize">{template.data_type}</p>
+                <div className="p-4 rounded-sm bg-gray-50 border border-black/10">
+                  <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500 mb-1">Data Type</p>
+                  <p className="font-bold capitalize text-black">{template.data_type}</p>
                 </div>
-                <div className="p-4 rounded-lg bg-white/5">
-                  <p className="text-xs text-gray-500 mb-1">Created</p>
-                  <p className="font-medium">{formatDate(template.created_at)}</p>
+                <div className="p-4 rounded-sm bg-gray-50 border border-black/10">
+                  <p className="text-[10px] font-mono uppercase tracking-widest text-gray-500 mb-1">Created</p>
+                  <p className="font-bold text-black font-mono text-sm">{formatDate(template.created_at)}</p>
                 </div>
               </div>
 
               {/* Schema preview */}
               <div>
-                <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <Code className="w-4 h-4 text-purple-400" />
+                <h4 className="text-[10px] font-mono uppercase tracking-widest font-bold mb-3 flex items-center gap-2 text-black">
+                  <Code className="w-4 h-4 text-black" />
                   Schema Fields
                 </h4>
-                <div className="rounded-lg bg-black/50 border border-white/10 p-4 font-mono text-sm overflow-x-auto">
-                  <pre className="text-gray-300">
+                <div className="rounded-sm bg-gray-50 border border-black/10 p-4 font-mono text-xs overflow-x-auto">
+                  <pre className="text-black">
                     {JSON.stringify(template.schema, null, 2)}
                   </pre>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3 pt-4 border-t border-white/10">
+              <div className="flex gap-3 pt-4 border-t border-black/10">
                 <Button 
-                  variant="gradient" 
-                  className="flex-1 gap-2"
+                  variant="outline" 
+                  className="flex-1 gap-2 bg-black text-white hover:bg-black/90 hover:text-white rounded-sm font-mono text-[10px] uppercase font-bold tracking-widest"
                   onClick={onUse}
                 >
                   <Play className="w-4 h-4" />
@@ -388,7 +362,7 @@ function PreviewModal({
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="gap-2"
+                  className="gap-2 border-black/10 hover:border-black rounded-sm text-black font-mono text-[10px] uppercase font-bold tracking-widest"
                   onClick={() => {
                     navigator.clipboard.writeText(JSON.stringify(template.schema, null, 2))
                     toast.success('Schema copied to clipboard')
@@ -426,15 +400,15 @@ function EmptyState({ search, onCreateNew }: { search: string, onCreateNew: () =
         }}
         className="inline-block mb-6"
       >
-        <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-500/30 flex items-center justify-center mx-auto">
-          <FileText className="w-12 h-12 text-purple-400" />
+        <div className="w-24 h-24 rounded-sm bg-black border border-black flex items-center justify-center mx-auto">
+          <FileText className="w-12 h-12 text-white" />
         </div>
       </motion.div>
       
-      <h3 className="text-2xl font-semibold mb-3">
+      <h3 className="text-2xl font-bold uppercase tracking-tight text-black mb-3">
         {search ? 'No templates found' : 'No templates yet'}
       </h3>
-      <p className="text-gray-400 mb-8 max-w-md mx-auto">
+      <p className="text-gray-500 font-mono text-[10px] uppercase tracking-widest mb-8 max-w-md mx-auto">
         {search 
           ? 'Try adjusting your search terms or filters to find what you\'re looking for' 
           : 'Create your first template to save your favorite data configurations for quick reuse'}
@@ -446,12 +420,10 @@ function EmptyState({ search, onCreateNew }: { search: string, onCreateNew: () =
           whileTap={{ scale: 0.95 }}
         >
           <Button 
-            variant="gradient" 
-            size="lg" 
-            className="gap-2"
+            className="gap-2 bg-black text-white hover:bg-black/90 rounded-sm font-mono text-[11px] uppercase font-bold tracking-widest px-6 h-12"
             onClick={onCreateNew}
           >
-            <Sparkles className="w-5 h-5" />
+            <Sparkles className="w-4 h-4" />
             Create Your First Template
           </Button>
         </motion.div>
@@ -463,16 +435,16 @@ function EmptyState({ search, onCreateNew }: { search: string, onCreateNew: () =
 // View toggle component
 function ViewToggle({ view, onViewChange }: { view: 'grid' | 'list', onViewChange: (v: 'grid' | 'list') => void }) {
   return (
-    <div className="flex rounded-lg bg-white/5 p-1">
+    <div className="flex rounded-sm bg-gray-100 p-1 border border-black/10">
       {(['grid', 'list'] as const).map((v) => (
         <button
           key={v}
           onClick={() => onViewChange(v)}
           className={cn(
-            "p-2 rounded-md transition-all",
+            "p-2 rounded-sm transition-all",
             view === v 
-              ? "bg-purple-500 text-white" 
-              : "text-gray-400 hover:text-white"
+              ? "bg-white text-black shadow-sm border border-black/10" 
+              : "text-gray-400 hover:text-black"
           )}
         >
           {v === 'grid' ? <Grid3X3 className="w-4 h-4" /> : <List className="w-4 h-4" />}
@@ -527,119 +499,62 @@ export default function TemplatesPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <FadeInWhenVisible>
-        <motion.div 
-          className="flex flex-col md:flex-row md:items-center justify-between gap-4"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <div>
-            <motion.h1 
-              className="text-4xl md:text-5xl font-heading font-bold mb-2"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
+      >
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-4xl font-bold tracking-tight uppercase text-black">Templates</h1>
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 5, repeat: Infinity }}
             >
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-                Templates
-              </span>
-            </motion.h1>
-            <motion.p 
-              className="text-gray-400"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.1 }}
-            >
-              Pre-built and custom data generation templates for quick access
-            </motion.p>
+              <FileText className="w-8 h-8 text-black" />
+            </motion.div>
           </div>
-          
+          <p className="text-gray-500 font-mono text-[10px] uppercase tracking-widest">Save and reuse your favorite data generation schemas</p>
+        </div>
+        <Link href="/dashboard/templates/new">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Link href="/dashboard/templates/new">
-              <Button variant="gradient" size="lg" className="gap-2 shadow-lg shadow-purple-500/25">
-                <Plus className="w-5 h-5" />
-                New Template
-              </Button>
-            </Link>
+            <Button className="gap-2 bg-black text-white hover:bg-black/90 rounded-sm font-mono text-[11px] uppercase font-bold tracking-widest px-6 h-12">
+              <Plus className="w-4 h-4" />
+              Create Template
+            </Button>
           </motion.div>
-        </motion.div>
-      </FadeInWhenVisible>
+        </Link>
+      </motion.div>
 
-      {/* Stats bar */}
-      {templates && templates.length > 0 && (
-        <FadeInWhenVisible delay={0.1}>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { label: 'Total Templates', value: templates.length, icon: FileText },
-              { label: 'Categories', value: categories.length, icon: Grid3X3 },
-              { label: 'Most Used', value: templates[0]?.name || 'N/A', icon: Star },
-              { label: 'Recent', value: formatDate(templates[templates.length - 1]?.created_at || new Date().toISOString()), icon: Clock },
-            ].map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + i * 0.05 }}
-              >
-                <Card className="border-white/10 hover:border-purple-500/30 transition-all">
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-purple-500/10">
-                      <stat.icon className="w-5 h-5 text-purple-400" />
-                    </div>
-                    <div>
-                      <p className="text-lg font-bold">
-                        {typeof stat.value === 'number' ? (
-                          <AnimatedNumber value={stat.value} duration={0.5} />
-                        ) : (
-                          <span className="truncate">{stat.value}</span>
-                        )}
-                      </p>
-                      <p className="text-xs text-gray-500">{stat.label}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </FadeInWhenVisible>
-      )}
-
-      {/* Filters */}
-      <FadeInWhenVisible delay={0.2}>
-        <SpotlightCard>
-          <CardContent className="p-6">
-            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-              {/* Search */}
-              <div className="relative flex-1 max-w-md group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
-                <Input
-                  placeholder="Search templates..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 bg-white/5 border-white/10 focus:border-purple-500 focus:ring-purple-500/20"
-                />
+      {/* Filters and Search */}
+      <FadeInWhenVisible>
+        <Card className="bg-white border-black/10 rounded-sm shadow-sm">
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+              <CategoryFilter 
+                categories={categories}
+                selected={category}
+                onSelect={setCategory}
+              />
+              <div className="flex items-center gap-4 w-full md:w-auto">
+                <div className="relative flex-1 md:w-64 group">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-black transition-colors" />
+                  <Input
+                    placeholder="Search templates..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-10 bg-white border border-black/10 focus:border-black text-black font-mono text-sm rounded-sm"
+                  />
+                </div>
+                <ViewToggle view={view} onViewChange={setView} />
               </div>
-
-              {/* Category filters */}
-              {categories.length > 0 && (
-                <CategoryFilter 
-                  categories={categories} 
-                  selected={category} 
-                  onSelect={setCategory} 
-                />
-              )}
-
-              {/* View toggle */}
-              <ViewToggle view={view} onViewChange={setView} />
             </div>
           </CardContent>
-        </SpotlightCard>
+        </Card>
       </FadeInWhenVisible>
 
       {/* Templates Grid/List */}
@@ -664,21 +579,7 @@ export default function TemplatesPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
               >
-                <Card className="h-64">
-                  <CardHeader>
-                    <Skeleton className="h-12 w-12 rounded-xl mb-3" />
-                    <Skeleton className="h-5 w-3/4" />
-                    <Skeleton className="h-4 w-full mt-2" />
-                  </CardHeader>
-                  <CardContent>
-                    <Skeleton className="h-4 w-1/2 mb-4" />
-                    <div className="flex gap-2">
-                      <Skeleton className="h-9 flex-1" />
-                      <Skeleton className="h-9 w-9" />
-                      <Skeleton className="h-9 w-9" />
-                    </div>
-                  </CardContent>
-                </Card>
+                <Skeleton className="h-[280px] w-full rounded-sm bg-gray-100" />
               </motion.div>
             ))}
           </motion.div>
@@ -688,6 +589,7 @@ export default function TemplatesPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            layout
             className={cn(
               "grid gap-6",
               view === 'grid' 
@@ -695,7 +597,7 @@ export default function TemplatesPage() {
                 : "grid-cols-1"
             )}
           >
-            <LayoutGroup>
+            <AnimatePresence mode="popLayout">
               {filteredTemplates.map((template, index) => (
                 <TemplateCard
                   key={template.id}
@@ -711,7 +613,7 @@ export default function TemplatesPage() {
                   isDeleting={deleteMutation.isPending}
                 />
               ))}
-            </LayoutGroup>
+            </AnimatePresence>
           </motion.div>
         ) : (
           <motion.div
@@ -720,7 +622,7 @@ export default function TemplatesPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <Card className="border-white/10">
+            <Card className="border-black rounded-sm bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <CardContent>
                 <EmptyState 
                   search={search} 

@@ -34,7 +34,6 @@ import { cn } from "@/lib/utils"
 import dynamic from "next/dynamic"
 import { 
   FadeInWhenVisible, 
-  SpotlightCard,
   LoadingSpinner
 } from "@/components/animations"
 
@@ -102,12 +101,12 @@ function AnimatedInput({
       animate={isFocused ? { scale: 1.01 } : { scale: 1 }}
       transition={{ type: "spring", stiffness: 500, damping: 35 }}
     >
-      <label className="text-sm font-medium mb-2 block text-gray-300">{label}</label>
+      <label className="text-[10px] font-mono font-bold uppercase tracking-widest mb-2 block text-gray-500">{label}</label>
       <div className="relative">
         {Icon && (
           <Icon className={cn(
             "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors",
-            isFocused ? "text-purple-400" : "text-gray-500"
+            isFocused ? "text-black" : "text-gray-400"
           )} />
         )}
         <Input 
@@ -117,17 +116,17 @@ function AnimatedInput({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           className={cn(
-            "bg-white/5 border-white/10 transition-all",
-            "focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20",
+            "bg-white border-black/10 text-black font-mono text-sm transition-all rounded-sm",
+            "focus:border-black focus:ring-0",
             Icon && "pl-10"
           )}
         />
         <motion.div
-          className="absolute inset-0 rounded-md pointer-events-none"
+          className="absolute inset-0 rounded-sm pointer-events-none"
           animate={isFocused ? { 
-            boxShadow: "0 0 0 2px rgba(139, 92, 246, 0.2)"
+            boxShadow: "0 0 0 1px rgba(0, 0, 0, 1)"
           } : { 
-            boxShadow: "0 0 0 0px rgba(139, 92, 246, 0)"
+            boxShadow: "0 0 0 0px rgba(0, 0, 0, 0)"
           }}
         />
       </div>
@@ -157,10 +156,10 @@ function DataTypeSelector({
               onSchemaUpdate(JSON.stringify(schemaTemplates[type.id], null, 2))
             }}
             className={cn(
-              "relative p-4 rounded-xl border transition-all text-left",
+              "relative p-4 rounded-sm border transition-all text-left group",
               isSelected 
-                ? "border-purple-500 bg-purple-500/10" 
-                : "border-white/10 hover:border-white/20 bg-white/5"
+                ? "border-black bg-black text-white" 
+                : "border-black/10 hover:border-black hover:bg-black/5 bg-white text-black"
             )}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -168,17 +167,17 @@ function DataTypeSelector({
             {isSelected && (
               <motion.div
                 layoutId="type-indicator"
-                className="absolute top-2 right-2 w-2 h-2 rounded-full bg-purple-500"
+                className="absolute top-2 right-2 w-2 h-2 rounded-full bg-white"
                 transition={{ type: "spring", stiffness: 500, damping: 35 }}
               />
             )}
             <type.icon className={cn(
-              "w-6 h-6 mb-2",
-              isSelected ? "text-purple-400" : "text-gray-400"
+              "w-6 h-6 mb-2 transition-colors",
+              isSelected ? "text-white" : "text-gray-500 group-hover:text-black"
             )} />
             <p className={cn(
-              "text-sm font-medium",
-              isSelected ? "text-white" : "text-gray-400"
+              "text-[10px] font-mono font-bold uppercase tracking-widest",
+              isSelected ? "text-white" : "text-gray-500 group-hover:text-black"
             )}>
               {type.label}
             </p>
@@ -203,7 +202,7 @@ function SchemaReference() {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-gray-400">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-gray-500 mb-4">
         Supported schema formats:
       </p>
       <div className="space-y-2">
@@ -213,13 +212,13 @@ function SchemaReference() {
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.05 }}
-            className="flex items-center justify-between py-2 px-3 rounded-lg bg-white/5 text-sm"
+            className="flex items-center justify-between py-2 px-3 rounded-sm border border-black/5 bg-gray-50 text-[11px] font-mono uppercase"
           >
             <div className="flex items-center gap-3">
-              <code className="text-purple-400 font-mono text-xs">{f.format}</code>
-              <span className="text-gray-400">{f.desc}</span>
+              <code className="text-black font-bold">{f.format}</code>
+              <span className="text-gray-500">{f.desc}</span>
             </div>
-            <span className="text-gray-500 font-mono text-xs">{f.example}</span>
+            <span className="text-gray-400">{f.example}</span>
           </motion.div>
         ))}
       </div>
@@ -237,10 +236,10 @@ function ValidationStatus({ isValid, error }: { isValid: boolean, error: string 
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 10 }}
         className={cn(
-          "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm",
+          "flex items-center gap-2 px-3 py-1.5 rounded-sm text-[10px] font-mono font-bold uppercase tracking-widest",
           isValid 
-            ? "bg-green-500/10 text-green-400 border border-green-500/30"
-            : "bg-red-500/10 text-red-400 border border-red-500/30"
+            ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
+            : "bg-red-50 text-red-600 border border-red-200"
         )}
       >
         {isValid ? (
@@ -272,10 +271,10 @@ function SaveButton({
   return (
     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
       <Button 
-        variant="gradient" 
+        variant="default" 
         onClick={onClick}
         disabled={isLoading || isDisabled}
-        className="gap-2 shadow-lg shadow-purple-500/25"
+        className="gap-2 bg-black text-white hover:bg-black/90 rounded-sm uppercase font-mono text-[11px] font-bold tracking-widest"
       >
         <AnimatePresence mode="wait">
           {isLoading ? (
@@ -392,24 +391,22 @@ export default function NewTemplatePage() {
           <div className="flex items-center gap-4 flex-1">
             <motion.div whileHover={{ scale: 1.1, x: -3 }} whileTap={{ scale: 0.9 }}>
               <Link href="/dashboard/templates">
-                <Button variant="ghost" size="icon" className="hover:bg-white/10">
+                <Button variant="ghost" size="icon" className="text-black hover:bg-black/5 rounded-sm">
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
               </Link>
             </motion.div>
             <div>
-              <h1 className="text-3xl md:text-4xl font-heading font-bold">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-                  New Template
-                </span>
+              <h1 className="text-3xl font-bold tracking-tight uppercase text-black">
+                New Template
               </h1>
-              <p className="text-gray-400 text-sm mt-1">Create a custom data generation template</p>
+              <p className="text-gray-500 font-mono text-[10px] uppercase tracking-widest mt-1">Create a custom data generation template</p>
             </div>
           </div>
           
           <div className="flex gap-3">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button variant="outline" className="gap-2 border-white/10">
+              <Button variant="outline" className="gap-2 border-black/10 hover:bg-black/5 text-black rounded-sm uppercase font-mono text-[11px] font-bold tracking-widest">
                 <Play className="w-4 h-4" />
                 Test
               </Button>
@@ -427,13 +424,13 @@ export default function NewTemplatePage() {
         {/* Left Panel - Settings */}
         <div className="lg:col-span-2 space-y-6">
           <FadeInWhenVisible delay={0.1}>
-            <SpotlightCard>
+            <Card className="bg-white border-black/10 rounded-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-purple-400" />
+                <CardTitle className="flex items-center gap-2 text-black font-bold uppercase tracking-tight text-xl">
+                  <FileText className="w-5 h-5 text-black" />
                   Template Details
                 </CardTitle>
-                <CardDescription>Basic information about your template</CardDescription>
+                <CardDescription className="text-gray-500 font-mono text-[10px] uppercase tracking-widest">Basic information about your template</CardDescription>
               </CardHeader>
               <CardContent className="space-y-5">
                 <AnimatedInput
@@ -445,21 +442,21 @@ export default function NewTemplatePage() {
                 />
                 
                 <div>
-                  <label className="text-sm font-medium mb-2 block text-gray-300">Description</label>
+                  <label className="text-[10px] font-mono font-bold uppercase tracking-widest mb-2 block text-gray-500">Description</label>
                   <motion.textarea
                     placeholder="Describe what this template generates..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     className={cn(
-                      "w-full min-h-[100px] rounded-md border bg-white/5 border-white/10 px-3 py-2 text-sm resize-none",
-                      "focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:outline-none transition-all"
+                      "w-full min-h-[100px] rounded-sm border bg-white border-black/10 px-3 py-2 text-black font-mono text-sm resize-none transition-all",
+                      "focus:border-black focus:ring-0 focus:outline-none"
                     )}
                     whileFocus={{ scale: 1.01 }}
                   />
                 </div>
                 
                 <div>
-                  <label className="text-sm font-medium mb-3 block text-gray-300">Data Type</label>
+                  <label className="text-[10px] font-mono font-bold uppercase tracking-widest mb-3 block text-gray-500">Data Type</label>
                   <DataTypeSelector 
                     selected={dataType} 
                     onSelect={setDataType}
@@ -467,37 +464,37 @@ export default function NewTemplatePage() {
                   />
                 </div>
               </CardContent>
-            </SpotlightCard>
+            </Card>
           </FadeInWhenVisible>
 
           <FadeInWhenVisible delay={0.2}>
-            <SpotlightCard>
+            <Card className="bg-white border-black/10 rounded-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Info className="w-5 h-5 text-purple-400" />
+                <CardTitle className="flex items-center gap-2 text-black font-bold uppercase tracking-tight text-xl">
+                  <Info className="w-5 h-5 text-black" />
                   Schema Reference
                 </CardTitle>
-                <CardDescription>JSON Schema format guide</CardDescription>
+                <CardDescription className="text-gray-500 font-mono text-[10px] uppercase tracking-widest">JSON Schema format guide</CardDescription>
               </CardHeader>
               <CardContent>
                 <SchemaReference />
               </CardContent>
-            </SpotlightCard>
+            </Card>
           </FadeInWhenVisible>
         </div>
 
         {/* Right Panel - Editor */}
         <div className="lg:col-span-3">
           <FadeInWhenVisible delay={0.15}>
-            <SpotlightCard className="h-[calc(100vh-12rem)]">
+            <Card className="h-[calc(100vh-12rem)] bg-white border-black/10 rounded-sm">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Code className="w-5 h-5 text-purple-400" />
+                    <CardTitle className="flex items-center gap-2 text-black font-bold uppercase tracking-tight text-xl">
+                      <Code className="w-5 h-5 text-black" />
                       Schema Editor
                     </CardTitle>
-                    <CardDescription>Define your JSON schema structure</CardDescription>
+                    <CardDescription className="text-gray-500 font-mono text-[10px] uppercase tracking-widest">Define your JSON schema structure</CardDescription>
                   </div>
                   <div className="flex items-center gap-3">
                     <ValidationStatus isValid={isValidJson} error={validationError} />
@@ -508,7 +505,7 @@ export default function NewTemplatePage() {
                           variant="ghost" 
                           size="sm"
                           onClick={handleCopySchema}
-                          className="hover:bg-white/10"
+                          className="hover:bg-black/5 text-black rounded-sm"
                         >
                           <Copy className="w-4 h-4" />
                         </Button>
@@ -518,7 +515,7 @@ export default function NewTemplatePage() {
                           variant="ghost" 
                           size="sm"
                           onClick={handleFormatSchema}
-                          className="hover:bg-white/10"
+                          className="hover:bg-black/5 text-black rounded-sm"
                         >
                           <Sparkles className="w-4 h-4" />
                         </Button>
@@ -530,8 +527,8 @@ export default function NewTemplatePage() {
               <CardContent className="h-[calc(100%-6rem)]">
                 <motion.div 
                   className={cn(
-                    "h-full border rounded-lg overflow-hidden transition-colors",
-                    isValidJson ? "border-white/10" : "border-red-500/30"
+                    "h-full border rounded-sm overflow-hidden transition-colors bg-white",
+                    isValidJson ? "border-black/10" : "border-red-500/30"
                   )}
                   animate={isValidJson ? {} : { 
                     boxShadow: ["0 0 0 0 rgba(239, 68, 68, 0)", "0 0 0 4px rgba(239, 68, 68, 0.1)", "0 0 0 0 rgba(239, 68, 68, 0)"]
@@ -541,7 +538,7 @@ export default function NewTemplatePage() {
                   <MonacoEditor
                     height="100%"
                     language="json"
-                    theme="vs-dark"
+                    theme="light"
                     value={schema}
                     onChange={handleSchemaChange}
                     options={{
@@ -560,7 +557,7 @@ export default function NewTemplatePage() {
                   />
                 </motion.div>
               </CardContent>
-            </SpotlightCard>
+            </Card>
           </FadeInWhenVisible>
         </div>
       </div>
